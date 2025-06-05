@@ -31,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.appBarMain.toolbar);
 
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // Ẩn chữ "trên toolbar"
+        }
 
         DrawerLayout drawer = binding.drawerLayout;
         BottomNavigationView bottomNavigationView = binding.bottomNavigation;
