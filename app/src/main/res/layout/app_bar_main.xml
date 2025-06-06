@@ -17,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@android:color/transparent"
+            android:background="#512727"
             android:elevation="0dp"
             app:popupTheme="@style/Theme.UNI_CINEMA.PopupOverlay" />
     </com.google.android.material.appbar.AppBarLayout>
