@@ -1,4 +1,4 @@
-package com.example.uni_cinema;
+package com.example.uni_cinema.ui.home;
 
 public class Movie {
     private String title;

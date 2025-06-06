@@ -1,4 +1,4 @@
-package com.example.uni_cinema;
+package com.example.uni_cinema.ui.home;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +7,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.uni_cinema.R;
 
 import java.util.List;
 

@@ -16,10 +16,6 @@ import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.example.uni_cinema.CenterItemAnimator;
-import com.example.uni_cinema.Movie;
-import com.example.uni_cinema.MovieCardAdapter;
-import com.example.uni_cinema.PromotionSliderAdapter;
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.databinding.FragmentHomeBinding;
 
@@ -113,7 +109,7 @@ public class HomeFragment extends Fragment {
                 carousel.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        centerItemAnimator.scaleAndAlphaAndRotateViews(carousel);
+                        centerItemAnimator.scaleAlphaAndRotateViewsSubtly(carousel);
                     }
                 }, 100); // Delay 100ms, bạn có thể điều chỉnh nếu cần thiết
             }
