@@ -32,5 +32,24 @@
         android:name="com.example.uni_cinema.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+    <fragment
+        android:id="@+id/nav_phim"
+        android:name="com.example.uni_cinema.ui.phim.PhimFragment"
+        android:label="Phim" />
+
+    <fragment
+        android:id="@+id/nav_qua_tang"
+        android:name="com.example.uni_cinema.ui.quatang.QuaTangFragment"
+        android:label="Quà tặng" />
+
+    <fragment
+        android:id="@+id/nav_rap"
+        android:name="com.example.uni_cinema.ui.rap.RapFragment"
+        android:label="Rạp" />
+
+    <fragment
+        android:id="@+id/nav_khuyen_mai"
+        android:name="com.example.uni_cinema.ui.khuyenmai.KhuyenMaiFragment"
+        android:label="Khuyến mãi" />
 
 </navigation>
