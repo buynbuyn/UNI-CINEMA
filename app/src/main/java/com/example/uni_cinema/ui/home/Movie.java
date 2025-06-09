@@ -28,4 +28,13 @@ public class Movie {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
+    private int timeMovie;
+
+    public int getTimeMovie() {
+        return timeMovie;
+    }
+
+    public void setTimeMovie(int timeMovie) {
+        this.timeMovie = timeMovie;
+    }
 }

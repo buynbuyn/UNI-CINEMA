@@ -58,9 +58,10 @@
                 android:textSize="20sp" />
 
             <TextView
+                android:id="@+id/durationText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⏱ 119 phút"
+                android:text="⏱ "
                 android:textColor="#F1F5F9"
                 android:textSize="20sp" />
         </LinearLayout>

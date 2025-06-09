@@ -36,6 +36,7 @@ public class HomeFragment extends Fragment {
     private MovieCardAdapter movieAdapter;
     private List<Movie> movieList = new ArrayList<>();
 
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -81,8 +82,13 @@ public class HomeFragment extends Fragment {
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
                         String title = doc.getString("nameMovie");
                         String imageUrl = doc.getString("imageMovie1");
-                        if (title != null && imageUrl != null) {
-                            movieList.add(new Movie(title, imageUrl));
+                        Long timeMovieLong = doc.getLong("timeMovie");
+
+                        if (title != null && imageUrl != null && timeMovieLong != null) {
+                            int timeMovie = timeMovieLong.intValue();
+                            Movie movie = new Movie(title, imageUrl);
+                            movie.setTimeMovie(timeMovie);
+                            movieList.add(movie);
                         }
                     }
                     movieAdapter.notifyDataSetChanged();

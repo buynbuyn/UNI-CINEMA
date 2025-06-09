@@ -9,7 +9,6 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
-
 import com.example.uni_cinema.R;
 
 import java.util.List;
@@ -24,17 +23,15 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView poster;
         TextView title;
-        // Các TextView khác nếu có (ví dụ: rating, duration)
+        TextView duration;
         // TextView rating;
-        // TextView duration;
 
         public ViewHolder(View view) {
             super(view);
             poster = view.findViewById(R.id.posterImage);
             title = view.findViewById(R.id.titleText);
-            // Ánh xạ các TextView khác nếu có
+            duration = view.findViewById(R.id.durationText);
             // rating = view.findViewById(R.id.ratingText);
-            // duration = view.findViewById(R.id.durationText);
         }
     }
 
@@ -47,8 +44,6 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        // Sử dụng toán tử modulo để lặp lại danh sách
-        // Đảm bảo movieList không rỗng để tránh lỗi chia cho 0
         if (movieList == null || movieList.isEmpty()) {
             return;
         }
@@ -57,20 +52,17 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
 
         Glide.with(holder.poster.getContext())
                 .load(movie.getImageUrl())
-                .placeholder(R.drawable.loading_image) // ảnh tạm khi đang load
-                .error(R.drawable.error_image)         // ảnh khi lỗi
+                .placeholder(R.drawable.loading_image)
+                .error(R.drawable.error_image)
                 .into(holder.poster);
 
         holder.title.setText(movie.getTitle());
-        // Set dữ liệu cho các TextView khác nếu có
+        holder.duration.setText(movie.getTimeMovie() + " phút");
         // holder.rating.setText(String.valueOf(movie.getRating()));
-        // holder.duration.setText(movie.getDuration());
     }
 
     @Override
     public int getItemCount() {
-        // Trả về một số lượng rất lớn để tạo hiệu ứng lặp vô tận
-        // Integer.MAX_VALUE là một lựa chọn an toàn và hiệu quả
         return Integer.MAX_VALUE;
     }
 }
