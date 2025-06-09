@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -18,7 +19,10 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.databinding.FragmentHomeBinding;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,18 +33,17 @@ public class HomeFragment extends Fragment {
     private CenterItemAnimator centerItemAnimator;
     private RecyclerView carousel;
     private LinearLayoutManager layoutManager;
+    private MovieCardAdapter movieAdapter;
+    private List<Movie> movieList = new ArrayList<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
-
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Khởi tạo slider (Promotion Slider)
+        // Setup Promotion Slider
         ViewPager2 slider = binding.promotionSlider;
         List<Integer> images = Arrays.asList(
                 R.drawable.banner1,
@@ -51,70 +54,69 @@ public class HomeFragment extends Fragment {
         PromotionSliderAdapter adapter = new PromotionSliderAdapter(images);
         slider.setAdapter(adapter);
 
-        // Tự động chuyển slide cho Promotion Slider
         Runnable sliderRunnable = new Runnable() {
             @Override
             public void run() {
                 int current = slider.getCurrentItem();
                 int next = (current + 1) % images.size();
                 slider.setCurrentItem(next, true);
-                handler.postDelayed(this, 3000); // 3 giây
+                handler.postDelayed(this, 3000);
             }
         };
         handler.post(sliderRunnable);
 
-        // Khởi tạo carousel phim mới (Movie Carousel)
+        // Setup Movie Carousel
         carousel = binding.cardCarousel;
         layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         carousel.setLayoutManager(layoutManager);
 
-        List<Movie> movies = Arrays.asList(
-                new Movie("SOLO Jennie", R.drawable.poster1),
-                new Movie("KILL THIS LOVE", R.drawable.poster2),
-                new Movie("SHUT DOWN", R.drawable.poster3),
-                new Movie("ICE CREAM", R.drawable.poster4)
-        );
-
-        MovieCardAdapter movieAdapter = new MovieCardAdapter(movies);
+        movieAdapter = new MovieCardAdapter(movieList);
         carousel.setAdapter(movieAdapter);
 
-        // Cuộn đến một vị trí trung tâm để tạo cảm giác lặp vô tận ngay từ đầu
-        if (!movies.isEmpty()) {
-            int startPosition = Integer.MAX_VALUE / 2;
-            startPosition = startPosition - (startPosition % movies.size());
-            carousel.scrollToPosition(startPosition);
-        }
+        // Fetch movies from Firestore
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("movies")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        String title = doc.getString("nameMovie");
+                        String imageUrl = doc.getString("imageMovie1");
+                        if (title != null && imageUrl != null) {
+                            movieList.add(new Movie(title, imageUrl));
+                        }
+                    }
+                    movieAdapter.notifyDataSetChanged();
 
-        // Gắn PagerSnapHelper để đảm bảo chỉ cuộn từng trang
+                    // Scroll to center
+                    if (!movieList.isEmpty()) {
+                        int startPosition = Integer.MAX_VALUE / 2;
+                        startPosition = startPosition - (startPosition % movieList.size());
+                        carousel.scrollToPosition(startPosition);
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show()
+                );
+
+        // Snap and animation
         PagerSnapHelper snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(carousel);
 
-        // Gắn CenterItemAnimator vào RecyclerView
         centerItemAnimator = new CenterItemAnimator(layoutManager);
         carousel.addOnScrollListener(centerItemAnimator);
 
-        // *** ĐOẠN CODE ĐỂ ÁP DỤNG HIỆU ỨNG NGAY LẬP TỨC SAU KHI LAYOUT HOÀN TẤT ***
-        // Sử dụng ViewTreeObserver và postDelayed để đảm bảo hiệu ứng được áp dụng đúng lúc
         carousel.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                // Đảm bảo chỉ chạy một lần
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                     carousel.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 } else {
                     carousel.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 }
-                // Gọi phương thức để áp dụng hiệu ứng sau một khoảng delay ngắn
-                // Điều này giúp đảm bảo RecyclerView đã hoàn thành việc vẽ các view con
-                carousel.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        centerItemAnimator.scaleAlphaAndRotateViewsSubtly(carousel);
-                    }
-                }, 100); // Delay 100ms, bạn có thể điều chỉnh nếu cần thiết
+                carousel.postDelayed(() ->
+                        centerItemAnimator.scaleAlphaAndRotateViewsSubtly(carousel), 100);
             }
         });
-        // ***********************************************************************************
 
         return root;
     }

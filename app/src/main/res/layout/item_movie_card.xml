@@ -36,7 +36,10 @@
             android:textAlignment="center"
             android:textColor="@android:color/white"
             android:textSize="25sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:lines="1"/>
 
         <!-- Dòng chấm điểm và thời lượng -->
         <LinearLayout

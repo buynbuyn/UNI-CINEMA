@@ -2,19 +2,30 @@ package com.example.uni_cinema.ui.home;
 
 public class Movie {
     private String title;
-    private int imageRes;
+    private String imageUrl; // dùng để nhận từ Firestore (ví dụ: imageMovie1)
 
-    public Movie(String title, int imageRes) {
+    public Movie() {
+        // Bắt buộc để Firestore có thể tự mapping dữ liệu
+    }
+
+    public Movie(String title, String imageUrl) {
         this.title = title;
-        this.imageRes = imageRes;
+        this.imageUrl = imageUrl;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public int getImageRes() {
-        return imageRes;
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
-

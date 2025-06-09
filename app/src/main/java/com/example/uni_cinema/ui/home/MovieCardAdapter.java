@@ -7,6 +7,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+
 
 import com.example.uni_cinema.R;
 
@@ -53,7 +55,12 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
         int actualPosition = position % movieList.size();
         Movie movie = movieList.get(actualPosition);
 
-        holder.poster.setImageResource(movie.getImageRes());
+        Glide.with(holder.poster.getContext())
+                .load(movie.getImageUrl())
+                .placeholder(R.drawable.loading_image) // ảnh tạm khi đang load
+                .error(R.drawable.error_image)         // ảnh khi lỗi
+                .into(holder.poster);
+
         holder.title.setText(movie.getTitle());
         // Set dữ liệu cho các TextView khác nếu có
         // holder.rating.setText(String.valueOf(movie.getRating()));

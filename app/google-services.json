@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "503641676608",
+    "project_id": "unicinema-80396",
+    "storage_bucket": "unicinema-80396.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503641676608:android:b2fdc9b2f23a8722c2f8a5",
+        "android_client_info": {
+          "package_name": "com.example.uni_cinema"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsRp6_HAOmncqb_pQecT-TiD7hgdu0J7E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
