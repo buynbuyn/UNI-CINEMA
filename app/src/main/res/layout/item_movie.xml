@@ -1,4 +1,4 @@
-<!-- res/layout/item_movie.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <!-- Ảnh poster -->
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imgPoster"
         android:layout_width="160dp"
@@ -14,17 +15,19 @@
         android:src="@drawable/error_image"
         app:shapeAppearanceOverlay="@style/RoundedPosterStyle" />
 
+    <!-- Phần thông tin bên phải -->
     <LinearLayout
         android:layout_width="229dp"
-        android:layout_height="175dp"
+        android:layout_height="202dp"
         android:orientation="vertical">
 
+        <!-- Nội dung phim -->
         <LinearLayout
-            android:layout_width="218dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_marginStart="8dp">
 
             <TextView
                 android:id="@+id/txtTitle"
@@ -34,33 +37,42 @@
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:lines="2"/>
+                android:maxLines="2"
+                android:ellipsize="end" />
 
             <TextView
                 android:id="@+id/txtDuration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingTop="6dp"
                 android:text="Thời lượng:" />
 
             <TextView
                 android:id="@+id/txtDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingTop="6dp"
                 android:text="Khởi chiếu:" />
 
             <TextView
                 android:id="@+id/txtGenre"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingTop="6dp"
                 android:text="Thể loại:" />
         </LinearLayout>
 
+        <!-- Nút đặt vé -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnBuyTicket"
-            android:layout_width="132dp"
-            android:layout_height="38dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="4dp"
+            android:layout_width="125dp"
+            android:layout_height="45dp"
+            android:layout_gravity="start"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="15dp"
             android:background="@drawable/bg_datve_button"
             android:text="Mua vé ngay"
             android:textColor="#FFFFFF" />

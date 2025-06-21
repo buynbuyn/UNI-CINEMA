@@ -21,7 +21,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PhimFragment extends Fragment {
 
@@ -66,26 +68,45 @@ public class PhimFragment extends Fragment {
 
     private void fetchMoviesFromFirebase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("movies")
+        // Bước 1: Lấy danh sách thể loại
+        db.collection("categories")
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    movieList.clear();
-                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                        String title = doc.getString("nameMovie");
-                        String imageUrl = doc.getString("imageMovie1");
-                        Long timeMovieLong = doc.getLong("timeMovie");
-
-                        if (title != null && imageUrl != null && timeMovieLong != null) {
-                            int timeMovie = timeMovieLong.intValue();
-                            Movie movie = new Movie(title, imageUrl);
-                            movie.setTimeMovie(timeMovie);
-                            movieList.add(movie);
-                        }
+                .addOnSuccessListener(categorySnapshot -> {
+                    // Tạo map để tra tên thể loại theo ID
+                    Map<String, String> categoryMap = new HashMap<>();
+                    for (DocumentSnapshot doc : categorySnapshot.getDocuments()) {
+                        categoryMap.put(doc.getId(), doc.getString("nameCategory")); // "name" là tên thể loại
                     }
-                    adapter.notifyDataSetChanged();
+
+                    // Bước 2: Lấy danh sách phim
+                    db.collection("movies")
+                            .get()
+                            .addOnSuccessListener(movieSnapshot -> {
+                                movieList.clear();
+                                for (DocumentSnapshot doc : movieSnapshot.getDocuments()) {
+                                    String title = doc.getString("nameMovie");
+                                    String imageUrl = doc.getString("imageMovie1");
+                                    Long timeMovieLong = doc.getLong("timeMovie");
+                                    String idCategory = doc.getString("idCategory");
+
+                                    if (title != null && imageUrl != null && timeMovieLong != null) {
+                                        int timeMovie = timeMovieLong.intValue();
+                                        String nameCategory = categoryMap.getOrDefault(idCategory, "Không rõ");
+
+                                        Movie movie = new Movie(title, imageUrl);
+                                        movie.setTimeMovie(timeMovie);
+                                        movie.setGenre(nameCategory); // ← Gán tên thể loại
+                                        movieList.add(movie);
+                                    }
+                                }
+                                adapter.notifyDataSetChanged();
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show()
+                            );
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(getContext(), "Không tải được danh sách thể loại", Toast.LENGTH_SHORT).show()
                 );
     }
 }
