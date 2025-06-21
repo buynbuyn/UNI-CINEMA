@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
+    <group
+            android:checkableBehavior="single"
+            android:background="#1B1B1B">
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_menu_camera"
