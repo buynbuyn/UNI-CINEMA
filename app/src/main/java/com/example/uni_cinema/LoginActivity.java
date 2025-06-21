@@ -89,12 +89,9 @@ public class LoginActivity extends AppCompatActivity {
                                 });
                     })
                     .addOnFailureListener(e -> {
-<<<<<<< HEAD
                         Toast.makeText(this, "Lỗi đăng nhập: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-=======
                         Log.e("AUTH_FAIL", "Firebase login error", e);
                         Toast.makeText(this, "Đăng nhập thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
->>>>>>> f58c90a3e5e53eb27ee283101546f30647dc451c
                     });
         });
 
