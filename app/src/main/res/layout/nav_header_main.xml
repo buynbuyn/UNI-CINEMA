@@ -10,7 +10,6 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="134dp"
-        android:background="@color/black"
         android:id="@+id/account">
 
         <!-- Container căn đáy -->

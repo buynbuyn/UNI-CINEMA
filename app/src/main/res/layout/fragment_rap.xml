@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_container"
+    android:orientation="vertical"
+
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" />
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/bg_nav"
+        android:padding="16dp">
+
+        <!-- Nút quay lại -->
+        <ImageButton
+            android:id="@+id/btn_back_home"
+            android:layout_width="23dp"
+            android:layout_height="19.31dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_back"
+            android:translationY="-18dp"
+            android:contentDescription="Back" />
+
+        <!-- Tiêu đề căn giữa màn hình -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Mua vé"
+            android:textColor="@android:color/white"
+            android:textSize="25sp"
+            android:translationY="18dp" />
+    </RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal">
+    <!-- RecyclerView hiển thị mua vé -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_region"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_theater"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:background="@color/cream_soft"
+         />
+</LinearLayout>
+</LinearLayout>
