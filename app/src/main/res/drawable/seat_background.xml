@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape>
+            <solid android:color="#FF9800" /> <!-- Ghế đã chọn: cam -->
+            <corners android:radius="2dp" />
+        </shape>
+    </item>
+    <item android:state_enabled="false">
+        <shape>
+            <solid android:color="#757575" /> <!-- Ghế đã đặt: xám -->
+            <corners android:radius="2dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#757575" /> <!-- Ghế trống: xám -->
+            <corners android:radius="2dp" />
+        </shape>
+    </item>
+</selector>
