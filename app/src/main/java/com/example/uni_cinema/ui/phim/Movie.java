@@ -1,6 +1,7 @@
 package com.example.uni_cinema.ui.phim;
 
 public class Movie {
+    private String id;
     private String title;
     private String imageUrl;
     private int timeMovie;
@@ -8,15 +9,11 @@ public class Movie {
     private String releaseDate;
     private int ageLimit;
 
-    // Constructor cơ bản (dùng khi chỉ có tên + ảnh)
-    public Movie(String title, String imageUrl) {
+    // Constructor
+    public Movie(String id, String title, String imageUrl, int timeMovie, String genre, String releaseDate, int ageLimit) {
+        this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
-    }
-
-    // Constructor đầy đủ (nếu bạn cần sau này)
-    public Movie(String title, int timeMovie, String genre, String releaseDate, int ageLimit) {
-        this.title = title;
         this.timeMovie = timeMovie;
         this.genre = genre;
         this.releaseDate = releaseDate;
@@ -24,6 +21,10 @@ public class Movie {
     }
 
     // Getters
+    public String getId() {
+        return id;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -49,6 +50,10 @@ public class Movie {
     }
 
     // Setters
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }

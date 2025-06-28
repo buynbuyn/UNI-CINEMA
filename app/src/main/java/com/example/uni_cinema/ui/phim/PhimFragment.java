@@ -68,36 +68,46 @@ public class PhimFragment extends Fragment {
 
     private void fetchMoviesFromFirebase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        // Bước 1: Lấy danh sách thể loại
         db.collection("categories")
                 .get()
                 .addOnSuccessListener(categorySnapshot -> {
-                    // Tạo map để tra tên thể loại theo ID
                     Map<String, String> categoryMap = new HashMap<>();
                     for (DocumentSnapshot doc : categorySnapshot.getDocuments()) {
-                        categoryMap.put(doc.getId(), doc.getString("nameCategory")); // "name" là tên thể loại
+                        categoryMap.put(doc.getId(), doc.getString("nameCategory"));
                     }
 
-                    // Bước 2: Lấy danh sách phim
                     db.collection("movies")
                             .get()
                             .addOnSuccessListener(movieSnapshot -> {
                                 movieList.clear();
                                 for (DocumentSnapshot doc : movieSnapshot.getDocuments()) {
-                                    String title = doc.getString("nameMovie");
+                                    String id = doc.getId();
+                                    String title = doc.getString("nameMovie"); // Giả sử "nameMovie" là tiêu đề, nếu không có thì mặc định
                                     String imageUrl = doc.getString("imageMovie1");
                                     Long timeMovieLong = doc.getLong("timeMovie");
                                     String idCategory = doc.getString("idCategory");
+                                    Long ageLimitLong = doc.getLong("ageMovie"); // Lấy ageMovie làm ageLimit
+                                    String releaseDate = doc.getString("releaseDate"); // Nếu không có, mặc định
 
-                                    if (title != null && imageUrl != null && timeMovieLong != null) {
-                                        int timeMovie = timeMovieLong.intValue();
-                                        String nameCategory = categoryMap.getOrDefault(idCategory, "Không rõ");
+                                    // Gán giá trị mặc định nếu null
+                                    title = (title != null) ? title : "Chưa có tiêu đề";
+                                    imageUrl = (imageUrl != null) ? imageUrl : "https://default-image-url.com";
+                                    int timeMovie = (timeMovieLong != null) ? timeMovieLong.intValue() : 120; // Mặc định 120 phút
+                                    String genre = (idCategory != null) ? categoryMap.getOrDefault(idCategory, "Không rõ") : "Không rõ";
+                                    releaseDate = (releaseDate != null) ? releaseDate : "Chưa xác định"; // Mặc định
+                                    int ageLimit = (ageLimitLong != null) ? ageLimitLong.intValue() : 0; // Mặc định 0
 
-                                        Movie movie = new Movie(title, imageUrl);
-                                        movie.setTimeMovie(timeMovie);
-                                        movie.setGenre(nameCategory); // ← Gán tên thể loại
-                                        movieList.add(movie);
-                                    }
+                                    // Tạo đối tượng Movie
+                                    Movie movie = new Movie(
+                                            id,
+                                            title,
+                                            imageUrl,
+                                            timeMovie,
+                                            genre,
+                                            releaseDate,
+                                            ageLimit
+                                    );
+                                    movieList.add(movie);
                                 }
                                 adapter.notifyDataSetChanged();
                             })

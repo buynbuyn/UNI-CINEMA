@@ -1,31 +1,21 @@
 package com.example.uni_cinema.ui.rap;
-
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.Space;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
-import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.Toast;
+import androidx.navigation.NavOptions;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.uni_cinema.R;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +28,7 @@ public class RapFragment extends Fragment {
     private TheaterAdapter theaterAdapter;
     private List<Region> regionList = new ArrayList<>();
     private List<String> theaterList = new ArrayList<>();
-
-    public RapFragment() {}
+    private FirebaseFirestore db;
 
     private final NavOptions fadeAnim = new NavOptions.Builder()
             .setEnterAnim(R.anim.fade_in)
@@ -48,40 +37,45 @@ public class RapFragment extends Fragment {
             .setPopExitAnim(R.anim.fade_out)
             .build();
 
-    @Nullable
+    public RapFragment() {}
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_rap, container, false);
+        return inflater.inflate(R.layout.fragment_rap, container, false);
+    }
 
-        ImageButton btnBack = rootView.findViewById(R.id.btn_back_home);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        db = FirebaseFirestore.getInstance();
+
+        ImageButton btnBack = view.findViewById(R.id.btn_back_home);
         btnBack.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(v);
             navController.navigate(R.id.nav_home, null, fadeAnim);
         });
 
-        // Danh sách vùng (trái)
-        recyclerView = rootView.findViewById(R.id.recyclerView_region);
+        // Vùng (bên trái)
+        recyclerView = view.findViewById(R.id.recyclerView_region);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         regionAdapter = new RegionAdapter(regionList, getContext(), selectedProvince -> {
-            loadTheatersByProvince(selectedProvince); // 👉 lọc rạp theo tỉnh đã chọn
+            loadTheatersByProvince(selectedProvince);
         });
         recyclerView.setAdapter(regionAdapter);
 
-        // Danh sách rạp (phải)
-        recyclerViewTheater = rootView.findViewById(R.id.recyclerView_theater);
+        // Rạp (bên phải)
+        recyclerViewTheater = view.findViewById(R.id.recyclerView_theater);
         recyclerViewTheater.setLayoutManager(new LinearLayoutManager(getContext()));
         theaterAdapter = new TheaterAdapter(theaterList);
         recyclerViewTheater.setAdapter(theaterAdapter);
 
-        fetchRegionsFromFirestore(); // 👉 chỉ load danh sách vùng ban đầu
-
-        return rootView;
+        fetchRegionsFromFirestore();
     }
 
     private void fetchRegionsFromFirestore() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("theaters")
                 .get()
                 .addOnSuccessListener(snapshot -> {
@@ -103,7 +97,6 @@ public class RapFragment extends Fragment {
     }
 
     private void loadTheatersByProvince(String provinceName) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("theaters")
                 .whereEqualTo("nameProvince", provinceName)
                 .get()
@@ -120,4 +113,5 @@ public class RapFragment extends Fragment {
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Không tải được rạp cho " + provinceName, Toast.LENGTH_SHORT).show());
     }
+
 }
