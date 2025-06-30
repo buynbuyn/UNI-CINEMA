@@ -56,18 +56,22 @@ public class PhimFragment extends Fragment {
             navController.navigate(R.id.nav_home, null, fadeAnim);
         });
 
-        // Setup RecyclerView
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MovieAdapter(movieList);
+
+        adapter = new MovieAdapter(movieList, movie -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("filmId", movie.getId());
+            Navigation.findNavController(requireView()).navigate(R.id.nav_rap, bundle);
+        });
         recyclerView.setAdapter(adapter);
 
-        // Load movie list from Firebase
         fetchMoviesFromFirebase();
     }
 
     private void fetchMoviesFromFirebase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+
         db.collection("categories")
                 .get()
                 .addOnSuccessListener(categorySnapshot -> {
@@ -82,41 +86,29 @@ public class PhimFragment extends Fragment {
                                 movieList.clear();
                                 for (DocumentSnapshot doc : movieSnapshot.getDocuments()) {
                                     String id = doc.getId();
-                                    String title = doc.getString("nameMovie"); // Giả sử "nameMovie" là tiêu đề, nếu không có thì mặc định
+                                    String title = doc.getString("nameMovie");
                                     String imageUrl = doc.getString("imageMovie1");
                                     Long timeMovieLong = doc.getLong("timeMovie");
                                     String idCategory = doc.getString("idCategory");
-                                    Long ageLimitLong = doc.getLong("ageMovie"); // Lấy ageMovie làm ageLimit
-                                    String releaseDate = doc.getString("releaseDate"); // Nếu không có, mặc định
+                                    Long ageLimitLong = doc.getLong("ageMovie");
+                                    String releaseDate = doc.getString("releaseDate");
 
-                                    // Gán giá trị mặc định nếu null
                                     title = (title != null) ? title : "Chưa có tiêu đề";
                                     imageUrl = (imageUrl != null) ? imageUrl : "https://default-image-url.com";
-                                    int timeMovie = (timeMovieLong != null) ? timeMovieLong.intValue() : 120; // Mặc định 120 phút
+                                    int timeMovie = (timeMovieLong != null) ? timeMovieLong.intValue() : 120;
                                     String genre = (idCategory != null) ? categoryMap.getOrDefault(idCategory, "Không rõ") : "Không rõ";
-                                    releaseDate = (releaseDate != null) ? releaseDate : "Chưa xác định"; // Mặc định
-                                    int ageLimit = (ageLimitLong != null) ? ageLimitLong.intValue() : 0; // Mặc định 0
+                                    releaseDate = (releaseDate != null) ? releaseDate : "Chưa xác định";
+                                    int ageLimit = (ageLimitLong != null) ? ageLimitLong.intValue() : 0;
 
-                                    // Tạo đối tượng Movie
-                                    Movie movie = new Movie(
-                                            id,
-                                            title,
-                                            imageUrl,
-                                            timeMovie,
-                                            genre,
-                                            releaseDate,
-                                            ageLimit
-                                    );
-                                    movieList.add(movie);
+                                    movieList.add(new Movie(id, title, imageUrl, timeMovie, genre, releaseDate, ageLimit));
                                 }
                                 adapter.notifyDataSetChanged();
                             })
                             .addOnFailureListener(e ->
-                                    Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show()
-                            );
+                                    Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show());
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Không tải được danh sách thể loại", Toast.LENGTH_SHORT).show()
-                );
+                        Toast.makeText(getContext(), "Không tải được danh sách thể loại", Toast.LENGTH_SHORT).show());
     }
+
 }

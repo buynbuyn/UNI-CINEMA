@@ -2,6 +2,7 @@ package com.example.uni_cinema.ui.rap;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -29,6 +30,8 @@ public class RapFragment extends Fragment {
     private List<Region> regionList = new ArrayList<>();
     private List<String> theaterList = new ArrayList<>();
     private FirebaseFirestore db;
+    private AppCompatButton btnContinue;
+    private String selectedTheaterName = null;
 
     private final NavOptions fadeAnim = new NavOptions.Builder()
             .setEnterAnim(R.anim.fade_in)
@@ -49,8 +52,21 @@ public class RapFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        String filmId = getArguments() != null ? getArguments().getString("filmId") : null;
 
+        if (filmId != null) {
+            // Lọc danh sách rạp chiếu phim này hoặc chỉ hiển thị
+        }
         db = FirebaseFirestore.getInstance();
+
+        btnContinue = view.findViewById(R.id.btnContinue);
+        btnContinue.setVisibility(View.GONE); // Ẩn nút từ đầu
+        btnContinue.setOnClickListener(v -> {
+            if (selectedTheaterName != null) {
+                Toast.makeText(getContext(), "Rạp đã chọn: " + selectedTheaterName, Toast.LENGTH_SHORT).show();
+                // TODO: Chuyển màn ở đây nếu cần
+            }
+        });
 
         ImageButton btnBack = view.findViewById(R.id.btn_back_home);
         btnBack.setOnClickListener(v -> {
@@ -69,9 +85,8 @@ public class RapFragment extends Fragment {
         // Rạp (bên phải)
         recyclerViewTheater = view.findViewById(R.id.recyclerView_theater);
         recyclerViewTheater.setLayoutManager(new LinearLayoutManager(getContext()));
-        theaterAdapter = new TheaterAdapter(theaterList);
-        recyclerViewTheater.setAdapter(theaterAdapter);
 
+        // KHÔNG gán adapter ở đây — sẽ gán sau khi có dữ liệu
         fetchRegionsFromFirestore();
     }
 
@@ -108,7 +123,13 @@ public class RapFragment extends Fragment {
                             theaterList.add(name);
                         }
                     }
-                    theaterAdapter.notifyDataSetChanged();
+
+                    // Khởi tạo adapter mới mỗi lần load dữ liệu
+                    theaterAdapter = new TheaterAdapter(theaterList, nameTheater -> {
+                        selectedTheaterName = nameTheater;
+                        btnContinue.setVisibility(View.VISIBLE);
+                    });
+                    recyclerViewTheater.setAdapter(theaterAdapter);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Không tải được rạp cho " + provinceName, Toast.LENGTH_SHORT).show());

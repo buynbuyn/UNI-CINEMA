@@ -12,10 +12,10 @@
         android:id="@+id/tvRegionName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TP.HCM"
+        android:text="Tên vùng rạp"
         android:paddingLeft="8dp"
         android:paddingTop="5dp"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
         />
 </LinearLayout>

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/region_container"
+    android:id="@+id/theater_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingVertical="12dp"
     android:paddingHorizontal="16dp"
     android:gravity="center_vertical"
-    android:background="@color/cream_soft"
+    android:background="@drawable/bg_theater_selected"
     >
 
     <TextView
         android:id="@+id/tvTheaterName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CGV Cộng Hòa"
+        android:text="Chi nhánh"
         android:paddingRight="8dp"
         android:paddingTop="5dp"
         android:textColor="@color/black"
-        android:textSize="18sp"
+        android:textSize="20sp"
        />
 </LinearLayout>
