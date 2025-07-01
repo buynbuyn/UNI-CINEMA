@@ -1,4 +1,4 @@
-package com.example.uni_cinema.ui;
+package com.example.uni_cinema.ui.phongchieu;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -17,9 +17,9 @@ import androidx.fragment.app.Fragment;
 
 import com.example.uni_cinema.R;
 
-public class SuatchieuFragment extends Fragment {
+public class PhongchieuFragment extends Fragment {
 
-    public SuatchieuFragment() {
+    public PhongchieuFragment() {
         // Required empty public constructor
     }
 
@@ -30,7 +30,7 @@ public class SuatchieuFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_suatchieu, container, false);
 
         // Tìm container trong fragment_rap.xml
-        LinearLayout containerLayout = rootView.findViewById(R.id.fragment_container);
+        LinearLayout containerLayout = rootView.findViewById(R.id.fragment_suatchieucontainer);
 
         // Tạo HorizontalScrollView lớn bao quanh 3 khối
         HorizontalScrollView scrollView = new HorizontalScrollView(getContext());

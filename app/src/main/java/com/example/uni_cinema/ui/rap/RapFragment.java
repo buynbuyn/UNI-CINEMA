@@ -32,6 +32,10 @@ public class RapFragment extends Fragment {
     private FirebaseFirestore db;
     private AppCompatButton btnContinue;
     private String selectedTheaterName = null;
+    private String movieTitle;
+    private String filmId;
+
+
 
     private final NavOptions fadeAnim = new NavOptions.Builder()
             .setEnterAnim(R.anim.fade_in)
@@ -52,19 +56,38 @@ public class RapFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        String filmId = getArguments() != null ? getArguments().getString("filmId") : null;
-
-        if (filmId != null) {
-            // Lọc danh sách rạp chiếu phim này hoặc chỉ hiển thị
+        if (getArguments() != null) {
+            filmId = getArguments().getString("filmId");
+            movieTitle = getArguments().getString("movieTitle");
         }
         db = FirebaseFirestore.getInstance();
 
         btnContinue = view.findViewById(R.id.btnContinue);
         btnContinue.setVisibility(View.GONE); // Ẩn nút từ đầu
+
         btnContinue.setOnClickListener(v -> {
             if (selectedTheaterName != null) {
-                Toast.makeText(getContext(), "Rạp đã chọn: " + selectedTheaterName, Toast.LENGTH_SHORT).show();
-                // TODO: Chuyển màn ở đây nếu cần
+                Bundle bundle = new Bundle();
+                bundle.putString("theaterName", selectedTheaterName);
+
+                if (selectedTheaterName != null) {
+                    // Luôn truyền theaterId nếu bạn có (hiện tại chưa thấy bạn truyền)
+                    // Ví dụ: bundle.putString("theaterId", selectedTheaterId);
+                }
+
+                // Truyền filmId nếu có
+                if (filmId != null) {
+                    bundle.putString("filmId", filmId);
+                }
+
+                // Truyền movieTitle nếu có
+                if (movieTitle != null) {
+                    bundle.putString("movieTitle", movieTitle);
+                }
+
+                Navigation.findNavController(v).navigate(R.id.nav_suatchieu, bundle, fadeAnim);
+            } else {
+                Toast.makeText(getContext(), "Vui lòng chọn rạp trước khi tiếp tục", Toast.LENGTH_SHORT).show();
             }
         });
 
