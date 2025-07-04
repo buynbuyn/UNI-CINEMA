@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.example.uni_cinema.R;
 import com.google.gson.Gson;
 
 import java.net.URLEncoder;
@@ -29,7 +30,7 @@ import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-public class PaymentActivity extends AppCompatActivity {
+public class ThanhToanActivity extends AppCompatActivity {
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
@@ -76,11 +77,8 @@ public class PaymentActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_payment); // Sử dụng layout activity_payment.xml
+            setContentView(R.layout.activity_payment); // Sử dụng layout activity_payment.xml
 
-
-
-        selectedSeats = new ArrayList<>();
 
         // Lấy dữ liệu từ Intent được truyền từ SeatSelectionActivity
         if (getIntent() != null && getIntent().getExtras() != null) {
@@ -107,23 +105,7 @@ public class PaymentActivity extends AppCompatActivity {
         }
 
 
-
-        // Vô hiệu hóa các RadioButton Momo và ZaloPay nếu bạn chỉ tập trung vào VNPay
-        // Để người dùng chỉ có thể chọn VNPay
-        RadioButton rbMomo = findViewById(R.id.rbMomo);
-        if (rbMomo != null) {
-            rbMomo.setEnabled(false);
-            rbMomo.setAlpha(0.5f); // Làm mờ đi
-        }
-
-        RadioButton rbZaloPay = findViewById(R.id.rbZaloPay);
-        if (rbZaloPay != null) {
-            rbZaloPay.setEnabled(false);
-            rbZaloPay.setAlpha(0.5f); // Làm mờ đi
-        }
-        // Đảm bảo rbVNPay được chọn
-
-        RadioButton rbVNPay = findViewById(R.id.rbVNPay);
+        RadioButton rbVNPay = findViewById(R.id.btnThanhToan);
         if (rbVNPay != null) {
             rbVNPay.setChecked(true);
         }
@@ -135,7 +117,7 @@ public class PaymentActivity extends AppCompatActivity {
                 selectedPaymentMethod = checkedRadioButton.getText().toString().replace("Thanh toán qua ", "");
                 // Chỉ cho phép chọn VNPay trong ví dụ này
                 if (!"VNPay".equals(selectedPaymentMethod)) {
-                    Toast.makeText(PaymentActivity.this, "Hiện tại chỉ hỗ trợ thanh toán VNPay.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ThanhToanActivity.this, "Hiện tại chỉ hỗ trợ thanh toán VNPay.", Toast.LENGTH_SHORT).show();
                     rbVNPay.setChecked(true); // Luôn đưa về VNPay
                     selectedPaymentMethod = "VNPay";
                 }

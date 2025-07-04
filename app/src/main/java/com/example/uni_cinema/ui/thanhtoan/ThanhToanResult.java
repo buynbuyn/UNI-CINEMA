@@ -30,7 +30,7 @@ import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PaymentResultActivity extends AppCompatActivity {
+public class ThanhToanResult extends AppCompatActivity {
 
     private ImageView ivStatusIcon;
     private TextView tvStatusTitle, tvStatusMessage;
@@ -46,8 +46,9 @@ public class PaymentResultActivity extends AppCompatActivity {
         setContentView(R.layout.activity_thanhtoanresult);
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
-        context = PaymentResultActivity.this;
+        context = ThanhToanResult.this;
 
         SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
 
+    }
 }
