@@ -1,5 +1,5 @@
 package com.example.uni_cinema.ui.quatang;
-
+import com.example.uni_cinema.LoginActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +22,11 @@ import com.google.android.material.tabs.TabLayout;
 
 import java.text.NumberFormat;
 import java.util.Locale;
+
+import android.content.Intent;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import android.widget.Toast;
 
 public class ChiTietQuaTangFragment extends Fragment {
 
@@ -110,6 +115,19 @@ public class ChiTietQuaTangFragment extends Fragment {
             int finalImageRes = imageRes;
 
             btnThanhToan.setOnClickListener(v -> {
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+                if (currentUser == null) {
+                    Toast.makeText(requireContext(), "Vui lòng đăng nhập trước khi mua quà tặng", Toast.LENGTH_SHORT).show();
+
+                    // Mở LoginActivity
+                    Intent intent = new Intent(requireContext(), LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    return;
+                }
+
+                // Đã đăng nhập -> tiếp tục thanh toán
                 Bundle bundle = new Bundle();
                 bundle.putString("ticket_type", finalTicketType);
                 bundle.putInt("price", finalPrice);
