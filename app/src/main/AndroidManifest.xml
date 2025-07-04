@@ -19,6 +19,7 @@
             android:exported="true"
             android:launchMode="singleTop"> <!-- Giữ singleTop cho an toàn -->
 
+<<<<<<< HEAD
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -29,6 +30,18 @@
                     android:host="payment-result"
                     android:scheme="uni_cinema" />
             </intent-filter>
+=======
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:host="payment-result"
+                android:scheme="uni_cinema" />
+        </intent-filter>
+>>>>>>> ed52fbe311397b5ad1760974e7db2916fa1036c2
         </activity>
         <activity
             android:name=".ui.phim.MovieDetailsActivity"
