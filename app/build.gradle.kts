@@ -48,7 +48,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:24.10.0")
     implementation("androidx.activity:activity:1.8.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0") // Use stable version
-
+    implementation("com.google.code.gson:gson:2.10.1") // Đã cập nhật phiên bản phổ biến
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") // Đã cập nhật phiên bản phổ biến
+    implementation(files("libs/merchant-1.0.25.aar"))
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -59,4 +61,6 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+    implementation ("androidx.cardview:cardview:1.0.0")
+
 }

@@ -42,5 +42,22 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar"></activity>
     </application>
+    <activity
+        android:name=".ui.thanhtoan.ThanhToanResultActivity"
+        android:exported="true"
+        android:launchMode="singleTop"> <!-- Giữ singleTop cho an toàn -->
 
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+
+            <data
+                android:host="payment-result"
+                android:scheme="uni_cinema" />
+        </intent-filter>
+
+    </activity>
 </manifest>

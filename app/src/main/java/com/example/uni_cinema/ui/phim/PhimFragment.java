@@ -61,8 +61,8 @@ public class PhimFragment extends Fragment {
 
         adapter = new MovieAdapter(movieList, movie -> {
             Bundle bundle = new Bundle();
-            bundle.putString("filmId", movie.getId());
-            bundle.putString("nameMovie", movie.getTitle());
+            bundle.putString("movieId", movie.getId());
+            bundle.putString("movieTitle", movie.getTitle());
             Navigation.findNavController(requireView()).navigate(R.id.nav_rap, bundle);
         });
         recyclerView.setAdapter(adapter);

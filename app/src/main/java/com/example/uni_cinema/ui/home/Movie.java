@@ -2,6 +2,7 @@ package com.example.uni_cinema.ui.home;
 
 public class Movie {
     private String title;
+    private String id;
     private String imageUrl; // dùng để nhận từ Firestore (ví dụ: imageMovie1)
 
     public Movie() {
@@ -16,7 +17,9 @@ public class Movie {
     public String getTitle() {
         return title;
     }
-
+    public String getId() {
+        return id;
+    }
     public String getImageUrl() {
         return imageUrl;
     }

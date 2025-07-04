@@ -72,10 +72,10 @@ public class MainActivity extends AppCompatActivity {
         View customBottomMenu = findViewById(R.id.custom_bottom_menu);
         View toolbar = binding.appBarMain.toolbar;
         Set<Integer> fragmentsToHideMenu = new HashSet<>(Arrays.asList(
-                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai
+                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai, R.id.bankQuaTangFragment, R.id.bankThanhToanFragment
         ));
         Set<Integer> fragmentsToHideToolbar = new HashSet<>(Arrays.asList(
-                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai
+                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai, R.id.bankQuaTangFragment, R.id.bankThanhToanFragment
         ));
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {

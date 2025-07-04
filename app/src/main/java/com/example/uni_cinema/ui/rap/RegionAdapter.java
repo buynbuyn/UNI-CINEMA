@@ -44,7 +44,7 @@ public class RegionAdapter extends RecyclerView.Adapter<RegionAdapter.RegionView
     @Override
     public void onBindViewHolder(@NonNull RegionViewHolder holder, int position) {
         Region region = regionList.get(position);
-        holder.tvRegionName.setText(region.nameProvince);
+        holder.tvRegionName.setText(region.getNameProvince());
 
         // Hiệu ứng chọn vùng
         if (position == selectedPosition) {
@@ -69,7 +69,7 @@ public class RegionAdapter extends RecyclerView.Adapter<RegionAdapter.RegionView
             notifyItemChanged(currentPos);
 
             if (listener != null) {
-                listener.onClick(regionList.get(currentPos).nameProvince);
+                listener.onClick(regionList.get(currentPos).getNameProvince());
             }
         });
 

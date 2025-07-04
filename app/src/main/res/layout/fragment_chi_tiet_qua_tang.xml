@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- Thanh tiêu đề -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/bg_nav"
+        android:padding="16dp">
+
+        <ImageButton
+            android:id="@+id/btn_back_home"
+            android:layout_width="23dp"
+            android:layout_height="19.31dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_back"
+            android:contentDescription="Back"
+            android:translationY="-18dp" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Quà tặng"
+            android:textColor="@android:color/white"
+            android:textSize="25sp"
+            android:translationY="18dp" />
+    </RelativeLayout>
+
+    <!-- Nội dung chính -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <!-- Ảnh vé -->
+            <ImageView
+                android:id="@+id/img_ticket"
+                android:layout_width="371dp"
+                android:layout_height="244dp"
+                android:layout_marginTop="16dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ticket01" />
+
+            <!-- Tên vé -->
+            <TextView
+                android:id="@+id/tv_ticket_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginTop="16dp"
+                android:paddingLeft="15dp"
+                android:text="VÉ XEM PHIM 2D"
+                android:textColor="#000000"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+            <!-- Giá vé -->
+            <TextView
+                android:id="@+id/tv_ticket_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="120.000 VNĐ"
+                android:textSize="20sp"
+                android:textColor="#000000"
+                android:layout_gravity="start"
+                android:paddingLeft="15dp"
+                android:layout_marginTop="4dp" />
+
+            <!-- Nút mua ngay -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_mua_ngay"
+                android:layout_width="370dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_thanh_toan"
+                android:text="Mua ngay"
+                android:textColor="@android:color/white"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+            <!-- Tabs -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:tabTextColor="#000000"
+                android:textSize="20sp"
+                app:tabSelectedTextColor="#ED1B24"
+                app:tabIndicatorColor="#000000"
+                app:tabGravity="fill"
+                app:tabMode="fixed" />
+
+            <!-- Nội dung 2 cột -->
+            <LinearLayout
+                android:id="@+id/layout_detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:paddingBottom="32dp">
+
+                <LinearLayout
+                    android:layout_width="41dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="Nội dung sản phẩm"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="Số lượng mua tối thiểu"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="Hạn sử dụng"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_height="match_parent"
+                        android:layout_width="match_parent"
+                        android:text="Quà tặng online"
+                        android:textSize="18sp" />
+                    <TextView
+                        android:layout_height="match_parent"
+                        android:layout_width="match_parent"
+                        android:text="Không giới hạn"
+                        android:textSize="18sp" />
+                    <TextView
+                        android:layout_height="match_parent"
+                        android:layout_width="match_parent"
+                        android:text="Thời hạn 30 ngày"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Hướng dẫn sử dụng -->
+            <LinearLayout
+                android:id="@+id/layout_instruction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="- Phiếu quà tặng có thể đổi thành 1 combo vé xem phim tại các rạp trên toàn quốc tại hệ thống.
+                                    \n\n- Mã vé sẽ được gửi đến mail đã đăng ký.
+                                    \n\n- Khách hàng dùng phiếu quà tặng để mua vé và thanh toán trên App UNI_CINEMA sẽ được rạp trực tiếp thông qua quầy soát vé.
+                                    \n\n- Phiếu quà đặng đã mua không hỗ trợ hoàn, hủy hoặc đổi trả."
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
