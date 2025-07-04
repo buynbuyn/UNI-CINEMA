@@ -1,6 +1,5 @@
 package com.example.uni_cinema;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -51,9 +50,6 @@ public class MainActivity extends AppCompatActivity {
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
 
-        navigationView.setItemTextAppearance(R.style.NavDrawerText);
-        navigationView.setItemIconSize(80); // nếu muốn tăng size icon
-
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -63,9 +59,12 @@ public class MainActivity extends AppCompatActivity {
         ).setOpenableLayout(drawer).build();
 
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
+
+        // KHÔNG dùng NavigationUI.setupWithNavController(navigationView, navController); nữa
+        // vì ta đã dùng custom menu bằng LinearLayout
 
         setupCustomBottomMenu();
+        setupCustomDrawerMenu();
 
         View customBottomMenu = findViewById(R.id.custom_bottom_menu);
         View toolbar = binding.appBarMain.toolbar;
@@ -102,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
         ProgressBar progress = headerView.findViewById(R.id.progress);
 
         if (user != null) {
-            // Người dùng đã đăng nhập
             userAvatar.setVisibility(View.VISIBLE);
             userName.setVisibility(View.VISIBLE);
             userLevel.setVisibility(View.VISIBLE);
@@ -124,23 +122,8 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     })
-                    .addOnFailureListener(e -> {
-                        userName.setText(user.getEmail());
-                    });
+                    .addOnFailureListener(e -> userName.setText(user.getEmail()));
         } else {
-            // Người dùng chưa đăng nhập
-            frameLayout.setVisibility(View.VISIBLE);
-            linearLayout1.setVisibility(View.VISIBLE);
-            linearLayout.setVisibility(View.VISIBLE);
-            userAvatar.setVisibility(View.VISIBLE);
-            userName.setVisibility(View.VISIBLE);
-            userLevel.setVisibility(View.VISIBLE);
-            txt_coin.setVisibility(View.VISIBLE);
-            point.setVisibility(View.VISIBLE);
-            qr.setVisibility(View.VISIBLE);
-            cost.setVisibility(View.VISIBLE);
-            progress.setVisibility(View.VISIBLE);
-
             userName.setText("Khách");
         }
     }
@@ -164,9 +147,34 @@ public class MainActivity extends AppCompatActivity {
         khuyenMai.setOnClickListener(v -> navController.navigate(R.id.nav_khuyen_mai, null, fadeAnim));
     }
 
+    private void setupCustomDrawerMenu() {
+        DrawerLayout drawer = binding.drawerLayout;
+
+        LinearLayout menuHome = findViewById(R.id.menu_home);
+        LinearLayout menuPhimDaXem = findViewById(R.id.menu_phim_da_xem);
+        LinearLayout menuThongTin = findViewById(R.id.menu_thong_tin);
+        LinearLayout menuTichDiem = findViewById(R.id.menu_tich_diem);
+
+        menuHome.setOnClickListener(v -> {
+            navController.navigate(R.id.nav_home, null, fadeAnim);
+            drawer.closeDrawers();
+        });
+        menuPhimDaXem.setOnClickListener(v -> {
+            navController.navigate(R.id.nav_lichsu, null, fadeAnim);
+            drawer.closeDrawers();
+        });
+        menuThongTin.setOnClickListener(v -> {
+            navController.navigate(R.id.nav_thongtin, null, fadeAnim);
+            drawer.closeDrawers();
+        });
+        menuTichDiem.setOnClickListener(v -> {
+            navController.navigate(R.id.nav_chinh_sach, null, fadeAnim);
+            drawer.closeDrawers();
+        });
+    }
+
     @Override
     public boolean onSupportNavigateUp() {
         return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
     }
-
 }
