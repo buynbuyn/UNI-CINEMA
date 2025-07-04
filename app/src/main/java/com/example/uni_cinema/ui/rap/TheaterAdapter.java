@@ -14,13 +14,15 @@ import com.example.uni_cinema.R;
 import java.util.List;
 
 public class TheaterAdapter extends RecyclerView.Adapter<TheaterAdapter.TheaterViewHolder> {
-    private List<String> theaterList;
+    private List<Region> theaterList;
     private int selectedPosition = -1;
     private OnTheaterClickListener listener;
+
     public interface OnTheaterClickListener {
-        void onTheaterClick(String theaterName);
+        void onTheaterClick(Region selectedRegion); // ✅ trả Region để lấy name + ID
     }
-    public TheaterAdapter(List<String> theaterList, OnTheaterClickListener listener) {
+
+    public TheaterAdapter(List<Region> theaterList, OnTheaterClickListener listener) {
         this.theaterList = theaterList;
         this.listener = listener;
     }
@@ -28,15 +30,17 @@ public class TheaterAdapter extends RecyclerView.Adapter<TheaterAdapter.TheaterV
     @NonNull
     @Override
     public TheaterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_theater, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_theater, parent, false);
         return new TheaterViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TheaterViewHolder holder, int position) {
-        holder.tvTheaterName.setText(theaterList.get(position));
+        Region region = theaterList.get(position);
+        holder.tvTheaterName.setText(region.getNameTheater()); // ✅ hiển thị tên rạp
 
-        // Đổi nền khi được chọn
+        // Nền được chọn
         if (position == selectedPosition) {
             holder.container.setSelected(true);
             holder.tvTheaterName.setTextColor(Color.WHITE);
@@ -51,11 +55,9 @@ public class TheaterAdapter extends RecyclerView.Adapter<TheaterAdapter.TheaterV
             notifyItemChanged(prev);
             notifyItemChanged(selectedPosition);
             if (listener != null) {
-                listener.onTheaterClick(theaterList.get(selectedPosition)); // 💥 gửi rạp được chọn
+                listener.onTheaterClick(region); // ✅ gửi Region về
             }
-
         });
-
     }
 
     @Override
@@ -70,7 +72,7 @@ public class TheaterAdapter extends RecyclerView.Adapter<TheaterAdapter.TheaterV
         public TheaterViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTheaterName = itemView.findViewById(R.id.tvTheaterName);
-            container = itemView.findViewById(R.id.theater_container); // 🎯 View dùng để đổi nền
+            container = itemView.findViewById(R.id.theater_container);
         }
     }
 }
