@@ -1,0 +1,5 @@
+<!-- res/drawable/divider_custom.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <size android:height="1dp" /> <!-- Độ dày đường kẻ -->
+    <solid android:color="#FFFFFF" /> <!-- Màu đường kẻ -->
+</shape>

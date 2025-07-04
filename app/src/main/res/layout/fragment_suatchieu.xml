@@ -33,7 +33,7 @@
             android:translationY="18dp" />
     </RelativeLayout>
 
-    <!-- RecyclerView hiển thị danh sách phim -->
+    <!-- RecyclerView hiển thị date -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerDate"
         android:layout_width="match_parent"
@@ -51,7 +51,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"
         android:clipToPadding="false" />
 
 </LinearLayout>

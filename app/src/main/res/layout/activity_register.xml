@@ -37,7 +37,33 @@
             android:paddingTop="10dp"
             android:layout_marginBottom="20dp"
             android:layout_gravity="center"/>
+        <!-- Khung nhập họ và tên -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_input_rounded"
+            android:padding="8dp"
+            android:layout_marginTop="0dp"
+            android:gravity="center_vertical">
 
+            <ImageView
+                android:layout_width="41dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_user" />
+
+            <EditText
+                android:id="@+id/fullNameEditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Họ và tên"
+                android:textColorHint="#E0D9D0"
+                android:textColor="#FFFFFF"
+                android:inputType="textPersonName" />
+        </LinearLayout>
 
         <!-- Khung nhập email -->
         <LinearLayout
@@ -95,6 +121,34 @@
                 android:textColor="#FFFFFF"
                 android:textColorHint="#E0D9D0" />
         </LinearLayout>
+        <!-- Khung xác nhận mật khẩu -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_input_rounded"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <ImageView
+                android:layout_width="41dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_pass" />
+
+            <EditText
+                android:id="@+id/confirmPasswordEditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Xác nhận mật khẩu"
+                android:importantForAutofill="no"
+                android:inputType="textPassword"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#E0D9D0" />
+        </LinearLayout>
 
         <!-- Nút ĐĂNG KÝ -->
         <androidx.appcompat.widget.AppCompatButton
@@ -125,7 +179,8 @@
         android:textColor="#F1EFD8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayoutRegister"
-        app:layout_constraintVertical_bias="0.731" />
+        app:layout_constraintVertical_bias="0.583" />
 </androidx.constraintlayout.widget.ConstraintLayout>
