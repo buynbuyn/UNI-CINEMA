@@ -14,4 +14,14 @@
         <item name="android:background">@drawable/seat_background</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
+    <style name="NavDrawerText">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+    <style name="CustomNavTextStyle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
 </resources>

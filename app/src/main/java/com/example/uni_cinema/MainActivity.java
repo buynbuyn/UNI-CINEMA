@@ -51,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
 
+        navigationView.setItemTextAppearance(R.style.NavDrawerText);
+        navigationView.setItemIconSize(80); // nếu muốn tăng size icon
+
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -165,4 +168,5 @@ public class MainActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
     }
+
 }

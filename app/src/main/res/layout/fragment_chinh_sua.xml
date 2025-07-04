@@ -161,11 +161,14 @@
             android:inputType="textPostalAddress" />
 
         <!-- Nút lưu -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Lưu"
+            android:background="@drawable/bg_button_thanh_toan"
+            android:text="Lưu thay đổi"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
             android:layout_marginTop="24dp" />
     </LinearLayout>
 </LinearLayout>
