@@ -1,15 +1,18 @@
 package com.example.uni_cinema.ui.quatang;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
@@ -83,5 +86,32 @@ public class ThanhToanQuaTangFragment extends Fragment {
             // Xử lý logic thanh toán ở đây
             // Ví dụ: thông báo, chuyển tới màn hình cảm ơn, hoặc tích lũy quà tặng
         });
+        // Khai báo các thành phần
+        LinearLayout optionQR = view.findViewById(R.id.option_qr);
+        LinearLayout optionBank = view.findViewById(R.id.option_bank);
+        LinearLayout optionWallet = view.findViewById(R.id.option_wallet);
+        AppCompatButton btnThanhToan = view.findViewById(R.id.btnThanhToan);
+
+        // Vô hiệu hóa nút thanh toán ban đầu
+        btnThanhToan.setEnabled(false);
+        btnThanhToan.setAlpha(0.4f); // làm mờ nút
+
+        // Tạo bộ chọn dùng chung
+        View.OnClickListener paymentSelectListener = v -> {
+            // Khi người dùng chọn 1 phương thức, làm nổi bật lựa chọn và bật nút
+            optionQR.setBackgroundColor(Color.TRANSPARENT);
+            optionBank.setBackgroundColor(Color.TRANSPARENT);
+            optionWallet.setBackgroundColor(Color.TRANSPARENT);
+
+            v.setBackgroundResource(R.drawable.bg_selected_payment); // bạn cần tạo bg_selected_payment.xml nếu muốn hiệu ứng đẹp
+
+            btnThanhToan.setEnabled(true);
+            btnThanhToan.setAlpha(1f); // bật lại độ trong suốt
+        };
+
+        // Gắn sự kiện chọn cho từng phương thức
+        optionQR.setOnClickListener(paymentSelectListener);
+        optionBank.setOnClickListener(paymentSelectListener);
+        optionWallet.setOnClickListener(paymentSelectListener);
     }
 }
