@@ -14,12 +14,26 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UNI_CINEMA"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.thanhtoan.ThanhToanResult"
+            android:exported="true"
+            android:launchMode="singleTop"> <!-- Giữ singleTop cho an toàn -->
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="payment-result"
+                    android:scheme="uni_cinema" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".ui.phim.MovieDetailsActivity"
             android:exported="true"
-            android:theme="@style/Theme.UNI_CINEMA.NoActionBar"/>
-
+            android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -35,29 +49,12 @@
             android:name=".RegisterActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.UNI_CINEMA.NoActionBar"></activity>
+            android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.UNI_CINEMA.NoActionBar"></activity>
+            android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
     </application>
-    <activity
-        android:name=".ui.thanhtoan.ThanhToanResultActivity"
-        android:exported="true"
-        android:launchMode="singleTop"> <!-- Giữ singleTop cho an toàn -->
 
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW" />
-
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-
-
-            <data
-                android:host="payment-result"
-                android:scheme="uni_cinema" />
-        </intent-filter>
-
-    </activity>
 </manifest>
