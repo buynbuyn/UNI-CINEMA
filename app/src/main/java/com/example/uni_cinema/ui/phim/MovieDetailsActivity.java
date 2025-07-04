@@ -3,6 +3,7 @@ package com.example.uni_cinema.ui.phim;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -64,12 +65,6 @@ public class MovieDetailsActivity extends AppCompatActivity {
         ImageButton btn_back = findViewById(R.id.btn_back);
         btn_back.setOnClickListener(v -> {
             finish();
-        });
-
-        btn_order.setOnClickListener(v -> {
-            Intent intent = new Intent(MovieDetailsActivity.this, RapFragment.class);
-            intent.putExtra("idMovie", movieId);
-            startActivity(intent);
         });
     }
 
