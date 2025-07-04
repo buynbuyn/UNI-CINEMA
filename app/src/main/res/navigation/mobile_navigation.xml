@@ -41,7 +41,6 @@
         android:id="@+id/nav_qua_tang"
         android:name="com.example.uni_cinema.ui.quatang.QuaTangFragment"
         android:label="Quà tặng">
-
         <action
             android:id="@+id/action_quaTangFragment_to_bankQuaTangFragment"
             app:destination="@id/bankQuaTangFragment" />
@@ -49,8 +48,20 @@
 
     <fragment
         android:id="@+id/bankQuaTangFragment"
-        android:name="com.example.uni_cinema.ui.quatang.BankQuaTangFragment"
+        android:name="com.example.uni_cinema.ui.quatang.ChiTietQuaTangFragment"
         android:label="Thanh toán vé" />
+    <action
+        android:id="@+id/action_bankQuaTangFragment_to_thanhToanFragment"
+        app:destination="@id/bankThanhToanFragment"
+        app:enterAnim="@anim/fade_in"
+        app:exitAnim="@anim/fade_out"
+        app:popEnterAnim="@anim/fade_in"
+        app:popExitAnim="@anim/fade_out" />
+    <fragment
+        android:id="@+id/bankThanhToanFragment"
+        android:name="com.example.uni_cinema.ui.quatang.ThanhToanQuaTangFragment"
+        android:label="Thanh toán quà tặng">
+    </fragment>
 
     <fragment
         android:id="@+id/nav_rap"

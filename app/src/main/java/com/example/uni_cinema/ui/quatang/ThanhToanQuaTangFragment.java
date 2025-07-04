@@ -1,66 +1,87 @@
 package com.example.uni_cinema.ui.quatang;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 
 import com.example.uni_cinema.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ThanhToanQuaTangFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.text.NumberFormat;
+import java.util.Locale;
+
 public class ThanhToanQuaTangFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    public ThanhToanQuaTangFragment() {}
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public ThanhToanQuaTangFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ThanhToanQuaTangFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ThanhToanQuaTangFragment newInstance(String param1, String param2) {
-        ThanhToanQuaTangFragment fragment = new ThanhToanQuaTangFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private final NavOptions fadeAnim = new NavOptions.Builder()
+            .setEnterAnim(R.anim.fade_in)
+            .setExitAnim(R.anim.fade_out)
+            .setPopEnterAnim(R.anim.fade_in)
+            .setPopExitAnim(R.anim.fade_out)
+            .build();
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_thanh_toan_qua_tang, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        NavController navController = Navigation.findNavController(view);
+
+        // Nhận dữ liệu từ Bundle
+        Bundle args = getArguments();
+        String ticketType = "";
+        int price = 0;
+        int imageRes = R.drawable.error_image;
+
+        if (args != null) {
+            ticketType = args.getString("ticket_type", "Không xác định");
+            price = args.getInt("price", 0);
+            imageRes = args.getInt("image_res", R.drawable.error_image);
+        }
+
+        // Hiển thị dữ liệu lên giao diện
+        ImageView imgTicket = view.findViewById(R.id.img_ticket);
+        TextView tvName = view.findViewById(R.id.tv_ticket_type); // hoặc tìm đúng ID tương ứng với tên phim
+        TextView tvPrice = view.findViewById(R.id.tv_ticket_price); // cập nhật đúng ID
+
+
+        imgTicket.setImageResource(imageRes);
+        tvName.setText(ticketType);
+
+        String formattedPrice = NumberFormat.getInstance(new Locale("vi", "VN")).format(price);
+        tvPrice.setText("Giá: " + formattedPrice + " VNĐ");
+
+        // Tổng tiền
+        TextView tvTotalMoney = view.findViewById(R.id.footerLayout).findViewById(R.id.tv_ticket_price); // cập nhật đúng ID
+        if (tvTotalMoney != null) {
+            tvTotalMoney.setText(formattedPrice + " VNĐ");
+        }
+
+        // Nút quay lại
+        ImageButton btnBack = view.findViewById(R.id.btn_back_home);
+        btnBack.setOnClickListener(v -> {
+            navController.popBackStack(); // hoặc navigate lên màn trước
+        });
+
+        // Nút Thanh toán
+        view.findViewById(R.id.btnThanhToan).setOnClickListener(v -> {
+            // Xử lý logic thanh toán ở đây
+            // Ví dụ: thông báo, chuyển tới màn hình cảm ơn, hoặc tích lũy quà tặng
+        });
     }
 }
