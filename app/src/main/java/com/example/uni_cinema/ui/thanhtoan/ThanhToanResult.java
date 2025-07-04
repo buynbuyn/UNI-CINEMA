@@ -1,5 +1,3 @@
-<<<<<<< HEAD:app/src/main/java/com/example/uni_cinema/ui/thanhtoan/ThanhToanResultActivity.java
-=======
 package com.example.uni_cinema.ui.thanhtoan;
 
 import androidx.annotation.NonNull;
@@ -54,4 +52,3 @@ public class ThanhToanResult extends AppCompatActivity {
 
     }
 }
->>>>>>> ed52fbe311397b5ad1760974e7db2916fa1036c2:app/src/main/java/com/example/uni_cinema/ui/thanhtoan/ThanhToanResult.java

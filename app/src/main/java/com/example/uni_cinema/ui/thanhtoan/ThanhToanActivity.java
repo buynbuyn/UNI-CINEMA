@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 package com.example.uni_cinema.ui.thanhtoan;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -260,4 +258,3 @@ public class ThanhToanActivity extends AppCompatActivity {
         }
     }
 }
->>>>>>> ed52fbe311397b5ad1760974e7db2916fa1036c2
