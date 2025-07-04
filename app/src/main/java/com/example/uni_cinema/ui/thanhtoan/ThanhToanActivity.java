@@ -141,10 +141,7 @@ public class ThanhToanActivity extends AppCompatActivity {
 
     // Cập nhật giao diện tóm tắt đơn hàng
     private void updateOrderSummaryUI() {
-        tvTrainRoute.setText(String.format("Tàu: %s (%s - %s)", trainName, startLocation, endLocation));
-        tvDateTime.setText(String.format("Ngày giờ: %s - %s", date, time));
-        tvSelectedSeats.setText("Ghế đã chọn: " + (selectedSeatIds != null ? String.join(", ", selectedSeatIds) : "Không có"));
-        tvTotalAmount.setText(String.format(Locale.getDefault(), "Tổng số tiền: %,.0f đ", totalAmount));
+
     }
 
     // Phương thức bắt đầu quá trình thanh toán VNPay
