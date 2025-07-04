@@ -12,25 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.example.uni_cinema.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
+        android:id="@+id/nav_lichsu"
+        android:name="com.example.uni_cinema.ui.lichsu.LichSuFragment"
+        android:label="Lịch sửa"
         tools:layout="@layout/fragment_gallery" />
-
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.uni_cinema.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
-    <fragment
-        android:id="@+id/nav_search"
-        android:name="com.example.uni_cinema.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
-    <fragment
-        android:id="@+id/nav_profile"
-        android:name="com.example.uni_cinema.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
+        android:id="@+id/nav_chinh_sach"
+        android:name="com.example.uni_cinema.ui.tichdiem.ChinhSachTichDiemFragment"
+        android:label="Chính sách tích điểm"
         tools:layout="@layout/fragment_slideshow" />
     <fragment
         android:id="@+id/nav_phim"
@@ -75,6 +64,13 @@
 
     <fragment
         android:id="@+id/nav_suatchieu"
-        android:name="com.example.uni_cinema.ui.suatchieu.SuatchieuFragment"
-        />
+        android:name="com.example.uni_cinema.ui.suatchieu.SuatchieuFragment" />
+    <fragment
+        android:id="@+id/nav_thongtin"
+        android:name="com.example.uni_cinema.ui.thongtin.ThongTinFragment" />
+    <fragment
+        android:id="@+id/nav_chinhsua"
+        android:name="com.example.uni_cinema.ui.thongtin.ChinhSuaFragment"
+        android:label="Chỉnh sửa thông tin"
+        tools:layout="@layout/fragment_chinh_sua" />
 </navigation>

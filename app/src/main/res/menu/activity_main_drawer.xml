@@ -9,14 +9,18 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_menu_camera"
-            android:title="@string/menu_home" />
+            android:title="Trang chủ" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_lichsu"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="@string/menu_gallery" />
+            android:title="Phim đã xem" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_thongtin"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="@string/menu_slideshow" />
+            android:title="Thông tin người dùng" />
+        <item
+            android:id="@+id/nav_chinh_sach"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Chính sách tích điểm" />
     </group>
 </menu>

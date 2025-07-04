@@ -3,8 +3,6 @@ package com.example.uni_cinema;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,6 +21,7 @@ import com.example.uni_cinema.databinding.ActivityMainBinding;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
 
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -55,39 +53,38 @@ public class MainActivity extends AppCompatActivity {
 
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
 
-        // Cấu hình cho Navigation Drawer
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow,
-                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai
-        ).setOpenableLayout(drawer)
-                .build();
+                R.id.nav_home, R.id.nav_lichsu, R.id.nav_khuyen_mai,
+                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap,
+                R.id.nav_thongtin, R.id.nav_chinh_sach, R.id.nav_chinhsua
+        ).setOpenableLayout(drawer).build();
 
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        // Xử lý custom bottom menu
         setupCustomBottomMenu();
 
-        // Ẩn/hiện menu dưới và toolbar tùy Fragment
         View customBottomMenu = findViewById(R.id.custom_bottom_menu);
         View toolbar = binding.appBarMain.toolbar;
+
         Set<Integer> fragmentsToHideMenu = new HashSet<>(Arrays.asList(
-                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai, R.id.bankQuaTangFragment, R.id.bankThanhToanFragment
+                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap,
+                R.id.nav_khuyen_mai, R.id.bankQuaTangFragment,
+                R.id.bankThanhToanFragment, R.id.nav_thongtin,
+                R.id.nav_lichsu, R.id.nav_chinh_sach, R.id.nav_chinhsua
         ));
-        Set<Integer> fragmentsToHideToolbar = new HashSet<>(Arrays.asList(
-                R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap, R.id.nav_khuyen_mai, R.id.bankQuaTangFragment, R.id.bankThanhToanFragment
-        ));
+        Set<Integer> fragmentsToHideToolbar = new HashSet<>(fragmentsToHideMenu);
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             customBottomMenu.setVisibility(fragmentsToHideMenu.contains(destination.getId()) ? View.GONE : View.VISIBLE);
             toolbar.setVisibility(fragmentsToHideToolbar.contains(destination.getId()) ? View.GONE : View.VISIBLE);
         });
 
-        // Khởi tạo FirebaseAuth
+        // Firebase Auth
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
 
-        // Lấy các view từ header của NavigationView
+        // Header views
         View headerView = navigationView.getHeaderView(0);
         FrameLayout frameLayout = headerView.findViewById(R.id.account);
         LinearLayout linearLayout = headerView.findViewById(R.id.account2);
@@ -100,11 +97,9 @@ public class MainActivity extends AppCompatActivity {
         ImageView qr = headerView.findViewById(R.id.qr);
         TextView cost = headerView.findViewById(R.id.cost);
         ProgressBar progress = headerView.findViewById(R.id.progress);
-        Button buttonAuth = headerView.findViewById(R.id.buttonAuth);
 
         if (user != null) {
             // Người dùng đã đăng nhập
-            // Hiển thị tất cả các view
             userAvatar.setVisibility(View.VISIBLE);
             userName.setVisibility(View.VISIBLE);
             userLevel.setVisibility(View.VISIBLE);
@@ -113,57 +108,40 @@ public class MainActivity extends AppCompatActivity {
             qr.setVisibility(View.VISIBLE);
             cost.setVisibility(View.VISIBLE);
             progress.setVisibility(View.VISIBLE);
-            buttonAuth.setVisibility(View.VISIBLE);
-            buttonAuth.setText("Đăng xuất");
-            buttonAuth.setOnClickListener(v -> {
-                auth.signOut(); // Đăng xuất khỏi Firebase
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Xóa stack Activity
-                startActivity(intent);
-                finish();
-            });
 
-            Bundle bundle = getIntent().getExtras();
-            if (bundle != null) {
-                String firstName = bundle.getString("firstName");
-                String lastName = bundle.getString("lastName");
-                if (firstName != null && lastName != null) {
-                    userName.setText(firstName + " " + lastName);
-                } else {
-                    userName.setText(user.getDisplayName() != null ? user.getDisplayName() : user.getEmail());
-                }
-            } else {
-                userName.setText(user.getDisplayName() != null ? user.getDisplayName() : user.getEmail());
-            }
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users").document(user.getUid()).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String fullName = documentSnapshot.getString("full_name");
+                            if (fullName != null && !fullName.isEmpty()) {
+                                userName.setText(fullName);
+                            } else {
+                                userName.setText(user.getEmail());
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        userName.setText(user.getEmail());
+                    });
         } else {
             // Người dùng chưa đăng nhập
-            // Chỉ hiển thị nút đăng nhập, ẩn các view khác
-            frameLayout.setVisibility(View.GONE);
-            linearLayout1.setVisibility(View.GONE);
-            linearLayout.setVisibility(View.GONE);
-            userAvatar.setVisibility(View.GONE);
-            userName.setVisibility(View.GONE);
-            userLevel.setVisibility(View.GONE);
-            txt_coin.setVisibility(View.GONE);
-            point.setVisibility(View.GONE);
-            qr.setVisibility(View.GONE);
-            cost.setVisibility(View.GONE);
-            progress.setVisibility(View.GONE);
-            buttonAuth.setVisibility(View.VISIBLE);
-            buttonAuth.setText("Đăng nhập");
-            // Thiết lập marginTop 10dp cho buttonAuth khi chưa đăng nhập
-            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) buttonAuth.getLayoutParams();
-            if (params == null) {
-                params = new ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            }
-            int marginTopInPx = (int) (50 * getResources().getDisplayMetrics().density); // Chuyển 10dp sang pixel
-            params.setMargins(params.leftMargin, marginTopInPx, params.rightMargin, params.bottomMargin);
-            buttonAuth.setLayoutParams(params);
-            buttonAuth.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
+            frameLayout.setVisibility(View.VISIBLE);
+            linearLayout1.setVisibility(View.VISIBLE);
+            linearLayout.setVisibility(View.VISIBLE);
+            userAvatar.setVisibility(View.VISIBLE);
+            userName.setVisibility(View.VISIBLE);
+            userLevel.setVisibility(View.VISIBLE);
+            txt_coin.setVisibility(View.VISIBLE);
+            point.setVisibility(View.VISIBLE);
+            qr.setVisibility(View.VISIBLE);
+            cost.setVisibility(View.VISIBLE);
+            progress.setVisibility(View.VISIBLE);
+
+            userName.setText("Khách");
         }
     }
 
-    // Hiệu ứng chuyển trang mờ
     private final NavOptions fadeAnim = new NavOptions.Builder()
             .setEnterAnim(R.anim.fade_in)
             .setExitAnim(R.anim.fade_out)
