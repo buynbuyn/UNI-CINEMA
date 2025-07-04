@@ -28,12 +28,13 @@ public class RapFragment extends Fragment {
     private RegionAdapter regionAdapter;
     private TheaterAdapter theaterAdapter;
     private List<Region> regionList = new ArrayList<>();
-    private List<String> theaterList = new ArrayList<>();
+    private List<Region> theaterList = new ArrayList<>();
     private FirebaseFirestore db;
     private AppCompatButton btnContinue;
     private String selectedTheaterName = null;
+    private String selectedTheaterId = null;
     private String movieTitle;
-    private String filmId;
+    private String movieId;
 
 
 
@@ -57,7 +58,7 @@ public class RapFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (getArguments() != null) {
-            filmId = getArguments().getString("filmId");
+            movieId = getArguments().getString("movieId");
             movieTitle = getArguments().getString("movieTitle");
         }
         db = FirebaseFirestore.getInstance();
@@ -69,21 +70,11 @@ public class RapFragment extends Fragment {
             if (selectedTheaterName != null) {
                 Bundle bundle = new Bundle();
                 bundle.putString("theaterName", selectedTheaterName);
+                bundle.putString("theaterId", selectedTheaterId); // ✅ thêm dòng này
 
-                if (selectedTheaterName != null) {
-                    // Luôn truyền theaterId nếu bạn có (hiện tại chưa thấy bạn truyền)
-                    // Ví dụ: bundle.putString("theaterId", selectedTheaterId);
-                }
+                if (movieId != null) bundle.putString("movieId", movieId);
+                if (movieTitle != null) bundle.putString("movieTitle", movieTitle);
 
-                // Truyền filmId nếu có
-                if (filmId != null) {
-                    bundle.putString("filmId", filmId);
-                }
-
-                // Truyền movieTitle nếu có
-                if (movieTitle != null) {
-                    bundle.putString("movieTitle", movieTitle);
-                }
 
                 Navigation.findNavController(v).navigate(R.id.nav_suatchieu, bundle, fadeAnim);
             } else {
@@ -123,7 +114,7 @@ public class RapFragment extends Fragment {
                     for (DocumentSnapshot doc : snapshot.getDocuments()) {
                         String province = doc.getString("nameProvince");
                         if (province != null && !addedProvinces.contains(province)) {
-                            regionList.add(new Region(province, null));
+                            regionList.add(new Region(province));
                             addedProvinces.add(province);
                         }
                     }
@@ -142,14 +133,16 @@ public class RapFragment extends Fragment {
                     theaterList.clear();
                     for (DocumentSnapshot doc : snapshot.getDocuments()) {
                         String name = doc.getString("nameTheater");
+                        String id = doc.getId(); // lấy ID Firestore của document
                         if (name != null) {
-                            theaterList.add(name);
+                            theaterList.add(new Region(provinceName, name, id));
                         }
                     }
 
                     // Khởi tạo adapter mới mỗi lần load dữ liệu
-                    theaterAdapter = new TheaterAdapter(theaterList, nameTheater -> {
-                        selectedTheaterName = nameTheater;
+                    theaterAdapter = new TheaterAdapter(theaterList, selectedRegion -> {
+                        selectedTheaterName = selectedRegion.getNameTheater();
+                        selectedTheaterId = selectedRegion.getTheaterId();
                         btnContinue.setVisibility(View.VISIBLE);
                     });
                     recyclerViewTheater.setAdapter(theaterAdapter);

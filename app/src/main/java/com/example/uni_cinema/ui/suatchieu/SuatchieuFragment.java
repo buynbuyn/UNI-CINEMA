@@ -30,10 +30,12 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class SuatchieuFragment extends Fragment {
     private TextView tvTheaterName;
@@ -42,13 +44,13 @@ public class SuatchieuFragment extends Fragment {
     private ScreeningAdapter screeningAdapter;
     private FirebaseFirestore db;
 
-    private String theaterId, filmId, movieTitle;
+    private String theaterId, movieId, movieTitle;
     private LocalDate selectedDate;
     private final ZoneId zoneVN = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_suatchieu, container, false); // đúng layout tên bạn đặt
+        return inflater.inflate(R.layout.fragment_suatchieu, container, false);
     }
 
     @Override
@@ -70,9 +72,10 @@ public class SuatchieuFragment extends Fragment {
         Bundle args = getArguments();
         if (args != null) {
             theaterId = args.getString("theaterId");
-            filmId = args.getString("filmId");
+            movieId = args.getString("movieId");
             movieTitle = args.getString("movieTitle");
-            tvTheaterName.setText(args.getString("theaterName"));
+            tvTheaterName.setText(args.getString("theaterName", "RẠP CHIẾU PHIM"));
+            Log.d("DEBUG_BUNDLE", "🎯 theaterId=" + theaterId + ", movieId=" + movieId + ", movieTitle=" + movieTitle);
         }
 
         recyclerDate.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
@@ -86,7 +89,7 @@ public class SuatchieuFragment extends Fragment {
 
         dateAdapter = new DateAdapter(dateList, date -> {
             selectedDate = date;
-            Log.d("DEBUG_DATE", "Ngày được chọn: " + date);
+            Log.d("DEBUG_DATE", "📅 Ngày được chọn: " + date);
             loadScreeningsByDate(date);
         });
         recyclerDate.setAdapter(dateAdapter);
@@ -96,87 +99,129 @@ public class SuatchieuFragment extends Fragment {
 
         loadScreeningsByDate(selectedDate);
 
-        view.findViewById(R.id.btn_back_home).setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(R.id.nav_rap));
+        ImageButton btnBack = view.findViewById(R.id.btn_back_home);
+        btnBack.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.nav_rap)
+        );
     }
 
     private void loadScreeningsByDate(LocalDate date) {
-        db.collection("screeningRoom").get().addOnSuccessListener(roomSnap -> {
-            Map<String, String> roomIdToName = new HashMap<>();
-            Map<String, String> roomIdToTheater = new HashMap<>();
-            Map<String, Long> roomIdToSeats = new HashMap<>();
+        db.collection("screening")
+                .whereEqualTo("stateScreening", true)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Screening> result = new ArrayList<>();
+                    Map<String, List<Screening.TimeSlot>> movieSlotMap = new HashMap<>();
+                    Set<String> roomIdSet = new HashSet<>();
+                    List<DocumentSnapshot> screeningDocs = new ArrayList<>();
 
-            for (DocumentSnapshot roomDoc : roomSnap) {
-                String roomId = roomDoc.getId();
-                roomIdToName.put(roomId, roomDoc.getString("nameScreenRoom"));
-                roomIdToTheater.put(roomId, roomDoc.getString("idTheater"));
-                roomIdToSeats.put(roomId, roomDoc.getLong("quantityDesk"));
-            }
+                    for (DocumentSnapshot doc : snapshot) {
+                        String movieIdInDoc = doc.getString("idMovie");
+                        String screenRoomId = doc.getString("idScreenRoom");
+                        Timestamp tsStart = doc.getTimestamp("dateTimeStart");
 
-            db.collection("screening")
-                    .whereEqualTo("stateScreening", true)
-                    .get()
-                    .addOnSuccessListener(snapshot -> {
-                        Log.d("DEBUG_SC", "Tổng số suất chiếu trả về: " + snapshot.size());
-                        List<Screening> result = new ArrayList<>();
-                        Map<String, List<Screening.TimeSlot>> movieSlotMap = new HashMap<>();
+                        Log.d("CHECK_DOC", "📍 screeningId = " + doc.getId()
+                                + "\n→ idMovie = " + movieIdInDoc
+                                + "\n→ screenRoomId = " + screenRoomId
+                                + "\n→ tsStart = " + tsStart);
 
-                        for (DocumentSnapshot doc : snapshot) {
-                            String movieId = doc.getString("idMovie");
-                            String screenRoomId = doc.getString("idScreenRoom");
-                            Timestamp tsStart = doc.getTimestamp("dateTimeStart");
-                            Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
-                            String screeningId = doc.getId();
-
-                            if (!Objects.equals(roomIdToTheater.get(screenRoomId), theaterId)) {
-                                Log.d("FILTER", "Rớt do sai theaterId → " + roomIdToTheater.get(screenRoomId));
-                                continue;
-                            }
-
-                            LocalDate showDate = tsStart.toDate().toInstant().atZone(zoneVN).toLocalDate();
-                            if (!showDate.equals(date)) {
-                                Log.d("FILTER", "Rớt do sai ngày → showDate = " + showDate + " | selected = " + date);
-                                continue;
-                            }
-                            if (filmId != null && !filmId.equals(movieId)) {
-                                Log.d("FILTER", "Rớt do sai phim → " + movieId);
-                                continue;
-                            }
-
-                            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
-                            String timeDisplay = tsStart.toDate().toInstant().atZone(zoneVN).toLocalTime().format(fmt)
-                                    + " - " + tsEnd.toDate().toInstant().atZone(zoneVN).toLocalTime().format(fmt);
-
-                            String screenRoomName = roomIdToName.getOrDefault(screenRoomId, "SCREEN ?");
-                            Log.d("BUG_ROOM", "Không tìm thấy screenRoomId: " + screenRoomId);
-
-                            int totalSeats = roomIdToSeats.getOrDefault(screenRoomId, 120L).intValue();
-
-                            Screening.TimeSlot slot = new Screening.TimeSlot(screenRoomName, timeDisplay, totalSeats, 0, screeningId);
-                            movieSlotMap.computeIfAbsent(movieId, k -> new ArrayList<>()).add(slot);
+                        if (tsStart == null || screenRoomId == null) {
+                            Log.d("FILTER_OUT", "⛔ Bỏ vì thiếu tsStart hoặc screenRoomId");
+                            continue;
                         }
 
-                        for (Map.Entry<String, List<Screening.TimeSlot>> entry : movieSlotMap.entrySet()) {
-                            String mId = entry.getKey();
-                            String mTitle;
-                            if (filmId != null && movieTitle != null) {
-                                mTitle = movieTitle;
-                            } else {
-                                mTitle = "Phim chưa rõ";
-                            }
-                            result.add(new Screening(mTitle, mId, entry.getValue()));
+                        LocalDate showDate = tsStart.toDate().toInstant().atZone(zoneVN).toLocalDate();
+                        if (!showDate.equals(date)) {
+                            Log.d("FILTER_OUT", "⛔ Bỏ vì khác ngày: " + showDate);
+                            continue;
                         }
 
-                        Log.d("DEBUG_SC", "Render tổng số phim suất: " + result.size());
+                        if (movieId != null && !movieId.equals(movieIdInDoc)) {
+                            Log.d("FILTER_OUT", "⛔ Bỏ vì khác movieId");
+                            continue;
+                        }
+
+                        screeningDocs.add(doc);
+                        roomIdSet.add(screenRoomId);
+                    }
+
+                    Log.d("DEBUG_SCREENING", "✅ Tổng suất chiếu hợp lệ: " + screeningDocs.size());
+                    Log.d("DEBUG_ROOMIDS", "📦 roomIdSet = " + roomIdSet);
+
+                    if (screeningDocs.isEmpty()) {
                         screeningAdapter.updateData(result);
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("DEBUG_SC", "Lỗi load screening: " + e.getMessage());
-                        Toast.makeText(getContext(), "Lỗi tải suất chiếu", Toast.LENGTH_SHORT).show();
-                    });
-        }).addOnFailureListener(e -> {
-            Log.e("DEBUG_SC", "Lỗi load screeningRoom: " + e.getMessage());
-            Toast.makeText(getContext(), "Lỗi tải phòng chiếu", Toast.LENGTH_SHORT).show();
-        });
+                        return;
+                    }
+
+                    db.collection("screeningRoom")
+                            .whereIn("__name__", new ArrayList<>(roomIdSet))
+                            .get()
+                            .addOnSuccessListener(roomSnap -> {
+                                Map<String, String> roomIdToName = new HashMap<>();
+                                Map<String, String> roomIdToTheater = new HashMap<>();
+                                Map<String, Long> roomIdToSeats = new HashMap<>();
+
+                                Log.d("DEBUG_ROOMSNAP", "🏢 Phòng trả về: " + roomSnap.size());
+                                for (DocumentSnapshot roomDoc : roomSnap) {
+                                    String id = roomDoc.getId();
+                                    String name = roomDoc.getString("nameScreenRoom");
+                                    String idTheater = roomDoc.getString("idTheater");
+                                    Long seats = roomDoc.getLong("quantityDesk");
+
+                                    Log.d("ROOM_MAP", "→ roomId = " + id + ", name = " + name + ", theater = " + idTheater);
+
+                                    roomIdToName.put(id, name);
+                                    roomIdToTheater.put(id, idTheater);
+                                    roomIdToSeats.put(id, seats);
+                                }
+
+                                for (DocumentSnapshot doc : screeningDocs) {
+                                    String screeningId = doc.getId();
+                                    String screenRoomId = doc.getString("idScreenRoom");
+                                    String movieIdInDoc = doc.getString("idMovie");
+
+                                    if (screenRoomId == null) continue;
+                                    String mappedTheater = roomIdToTheater.get(screenRoomId);
+                                    if (theaterId != null && !Objects.equals(mappedTheater, theaterId)) {
+                                        Log.d("FILTER_OUT", "⛔ Rớt vì khác rạp: mapping = " + mappedTheater);
+                                        continue;
+                                    }
+
+                                    Timestamp tsStart = doc.getTimestamp("dateTimeStart");
+                                    Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
+                                    if (tsStart == null || tsEnd == null) continue;
+
+                                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
+                                    String timeDisplay = tsStart.toDate().toInstant().atZone(zoneVN).toLocalTime().format(fmt)
+                                            + " - " + tsEnd.toDate().toInstant().atZone(zoneVN).toLocalTime().format(fmt);
+
+                                    String roomName = roomIdToName.getOrDefault(screenRoomId, "Phòng ?");
+                                    int totalSeats = roomIdToSeats.getOrDefault(screenRoomId, 120L).intValue();
+
+                                    Screening.TimeSlot slot = new Screening.TimeSlot(roomName, timeDisplay, totalSeats, 0, screeningId);
+                                    movieSlotMap.computeIfAbsent(movieIdInDoc, k -> new ArrayList<>()).add(slot);
+
+                                    Log.d("DEBUG_SLOT", "🎞 Slot: " + roomName + " | " + timeDisplay + " | Movie = " + movieIdInDoc);
+                                }
+
+                                for (Map.Entry<String, List<Screening.TimeSlot>> entry : movieSlotMap.entrySet()) {
+                                    String mid = entry.getKey();
+                                    String title = (movieId != null && movieId.equals(mid) && movieTitle != null)
+                                            ? movieTitle : "Phim chưa rõ";
+                                    result.add(new Screening(title, mid, entry.getValue()));
+                                }
+
+                                Log.d("FINAL_RESULT", "🎬 Tổng phim hiển thị: " + result.size());
+                                screeningAdapter.updateData(result);
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getContext(), "Lỗi tải phòng chiếu", Toast.LENGTH_SHORT).show();
+                                Log.e("DEBUG_ROOM", "Lỗi load room: " + e.getMessage());
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Lỗi tải suất chiếu", Toast.LENGTH_SHORT).show();
+                    Log.e("DEBUG_SC", "Lỗi load screening: " + e.getMessage());
+                });
     }
 }
