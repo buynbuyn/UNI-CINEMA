@@ -1,5 +1,6 @@
 package com.example.uni_cinema;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -55,13 +56,12 @@ public class MainActivity extends AppCompatActivity {
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_lichsu, R.id.nav_khuyen_mai,
                 R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap,
-                R.id.nav_thongtin, R.id.nav_chinh_sach, R.id.nav_chinhsua
+                R.id.nav_thongtin, R.id.nav_chinh_sach, R.id.nav_chinhsua,
+                R.id.nav_change_password
         ).setOpenableLayout(drawer).build();
 
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
 
-        // KHÔNG dùng NavigationUI.setupWithNavController(navigationView, navController); nữa
-        // vì ta đã dùng custom menu bằng LinearLayout
 
         setupCustomBottomMenu();
         setupCustomDrawerMenu();
@@ -73,7 +73,8 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap,
                 R.id.nav_khuyen_mai, R.id.bankQuaTangFragment,
                 R.id.bankThanhToanFragment, R.id.nav_thongtin,
-                R.id.nav_lichsu, R.id.nav_chinh_sach, R.id.nav_chinhsua
+                R.id.nav_lichsu, R.id.nav_chinh_sach, R.id.nav_chinhsua,
+                R.id.nav_change_password
         ));
         Set<Integer> fragmentsToHideToolbar = new HashSet<>(fragmentsToHideMenu);
 
@@ -159,14 +160,27 @@ public class MainActivity extends AppCompatActivity {
             navController.navigate(R.id.nav_home, null, fadeAnim);
             drawer.closeDrawers();
         });
+
         menuPhimDaXem.setOnClickListener(v -> {
-            navController.navigate(R.id.nav_lichsu, null, fadeAnim);
+            if (user != null) {
+                navController.navigate(R.id.nav_lichsu, null, fadeAnim);
+            } else {
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                finish(); // Tuỳ chọn: đóng MainActivity để tránh quay lại
+            }
             drawer.closeDrawers();
         });
+
         menuThongTin.setOnClickListener(v -> {
-            navController.navigate(R.id.nav_thongtin, null, fadeAnim);
+            if (user != null) {
+                navController.navigate(R.id.nav_thongtin, null, fadeAnim);
+            } else {
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                finish();
+            }
             drawer.closeDrawers();
         });
+
         menuTichDiem.setOnClickListener(v -> {
             navController.navigate(R.id.nav_chinh_sach, null, fadeAnim);
             drawer.closeDrawers();

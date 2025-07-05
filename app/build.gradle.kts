@@ -62,5 +62,7 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
     implementation ("androidx.cardview:cardview:1.0.0")
+    // thu viện để ẩn hiện mật khẩu
+    implementation ("com.google.android.material:material:1.10.0")
 
 }
