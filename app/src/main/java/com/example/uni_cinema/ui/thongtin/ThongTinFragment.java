@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.thongtin;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +15,10 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
+import com.example.uni_cinema.LoginActivity;
+import com.example.uni_cinema.MainActivity;
 import com.example.uni_cinema.R;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class ThongTinFragment extends Fragment {
 
@@ -44,9 +48,24 @@ public class ThongTinFragment extends Fragment {
         });
 
         // Nút "Thông tin cá nhân"
-        LinearLayout layoutInfo = view.findViewById(R.id.layout_info); // ID này phải thêm trong XML
+        LinearLayout layoutInfo = view.findViewById(R.id.layout_info);
         layoutInfo.setOnClickListener(v -> {
             navController.navigate(R.id.nav_chinhsua, null, fadeAnim);
+        });
+        // Nút "Đổi mât khẩu"
+        LinearLayout layoutChangePW = view.findViewById(R.id.layout_change_password);
+        layoutChangePW.setOnClickListener(v -> {
+            navController.navigate(R.id.nav_change_password, null, fadeAnim);
+        });
+        LinearLayout layoutLogout = view.findViewById(R.id.logoutLayout);
+        layoutLogout.setOnClickListener(v -> {
+            // 1. Đăng xuất người dùng khỏi Firebase
+            FirebaseAuth.getInstance().signOut();
+
+            // 2. Chuyển về trang chủ (MainActivity) dưới vai trò khách
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear stack
+            startActivity(intent);
         });
     }
 }

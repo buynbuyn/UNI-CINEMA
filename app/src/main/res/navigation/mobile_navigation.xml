@@ -15,7 +15,7 @@
         android:id="@+id/nav_lichsu"
         android:name="com.example.uni_cinema.ui.lichsu.LichSuFragment"
         android:label="Lịch sửa"
-        tools:layout="@layout/fragment_gallery" />
+        tools:layout="@layout/fragment_lich_su" />
     <fragment
         android:id="@+id/nav_chinh_sach"
         android:name="com.example.uni_cinema.ui.tichdiem.ChinhSachTichDiemFragment"
@@ -73,4 +73,9 @@
         android:name="com.example.uni_cinema.ui.thongtin.ChinhSuaFragment"
         android:label="Chỉnh sửa thông tin"
         tools:layout="@layout/fragment_chinh_sua" />
+    <fragment
+        android:id="@+id/nav_change_password"
+        android:name="com.example.uni_cinema.ui.thongtin.DoiMKFragment"
+        android:label="Chỉnh sửa thông tin"
+        tools:layout="@layout/fragment_doi_m_k" />
 </navigation>
