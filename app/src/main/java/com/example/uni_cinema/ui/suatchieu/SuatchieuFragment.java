@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.suatchieu;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.example.uni_cinema.ui.phongchieu.DeskActivity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -110,7 +112,7 @@ public class SuatchieuFragment extends Fragment {
             Map<String, String> movieIdToName = new HashMap<>();
             for (DocumentSnapshot movieDoc : movieSnap) {
                 String id = movieDoc.getId();
-                String name = movieDoc.getString("nameMovie"); // ⬅️ dùng đúng field của bạn
+                String name = movieDoc.getString("nameMovie");
                 movieIdToName.put(id, name);
             }
 
@@ -206,7 +208,14 @@ public class SuatchieuFragment extends Fragment {
                                         String roomName = roomIdToName.getOrDefault(screenRoomId, "Phòng ?");
                                         int totalSeats = roomIdToSeats.getOrDefault(screenRoomId, 120L).intValue();
 
-                                        Screening.TimeSlot slot = new Screening.TimeSlot(roomName, timeDisplay, totalSeats, 0, screeningId);
+                                        Screening.TimeSlot slot = new Screening.TimeSlot(
+                                                roomName,
+                                                timeDisplay,
+                                                totalSeats,
+                                                0, // bookedSeats
+                                                screeningId,
+                                                screenRoomId // Thêm screenRoomId
+                                        );
                                         movieSlotMap.computeIfAbsent(movieIdInDoc, k -> new ArrayList<>()).add(slot);
 
                                         Log.d("DEBUG_SLOT", "🎞 Slot: " + roomName + " | " + timeDisplay + " | Movie = " + movieIdInDoc);

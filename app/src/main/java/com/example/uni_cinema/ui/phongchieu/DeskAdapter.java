@@ -41,7 +41,7 @@ public class DeskAdapter extends RecyclerView.Adapter<DeskAdapter.DeskViewHolder
                 RecyclerView.LayoutParams.MATCH_PARENT,
                 RecyclerView.LayoutParams.WRAP_CONTENT
         ));
-        gridLayout.setRowCount(9); // 9 rows (A-K)
+        gridLayout.setRowCount(10); // 9 rows (A-K)
         gridLayout.setColumnCount(14); // Maximum columns based on your layout
         return new DeskViewHolder(gridLayout, parent.getContext());
     }
@@ -73,9 +73,9 @@ public class DeskAdapter extends RecyclerView.Adapter<DeskAdapter.DeskViewHolder
         public void bind(List<Desk> desks) {
             gridLayout.removeAllViews();
             char[] rows = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K'};
-            int[][] seatCounts = {{4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {2, 6, 2}};
+            int[][] seatCounts = {{4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {4, 6, 4}, {2,3,4,2}};
 
-            for (int row = 0; row < 9; row++) {
+            for (int row = 0; row < 10; row++) {
                 for (int colBlock = 0; colBlock < 3; colBlock++) {
                     LinearLayout rowLayout = new LinearLayout(gridLayout.getContext());
                     LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(

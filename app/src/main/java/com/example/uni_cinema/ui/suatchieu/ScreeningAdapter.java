@@ -1,6 +1,7 @@
 package com.example.uni_cinema.ui.suatchieu;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.uni_cinema.R;
+import com.example.uni_cinema.ui.phongchieu.DeskActivity;
 
 import java.util.List;
 
-public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.ScreeningViewHolder>{
+public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.ScreeningViewHolder> {
     private List<Screening> screeningList;
     private final Context context;
 
@@ -50,6 +52,16 @@ public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.Scre
             tvRoom.setText(slot.screenRoomName);
             tvTime.setText(slot.timeRangeDisplay);
             tvSeats.setText(slot.bookedSeats + "/" + slot.totalSeats + " Ghế");
+
+            // Thêm sự kiện nhấn cho slotView
+            slotView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, DeskActivity.class);
+                intent.putExtra("idScreeningRoom", slot.screenRoomId); // Đảm bảo bạn đã thêm screenRoomId vào TimeSlot
+                intent.putExtra("screeningId", slot.screeningId); // Truyền screeningId
+                intent.putExtra("movieTitle", item.movieTitle); // Truyền movieTitle nếu cần
+                intent.putExtra("timeRange", slot.timeRangeDisplay); // Truyền thời gian suất chiếu nếu cần
+                context.startActivity(intent);
+            });
 
             holder.containerSuatChieu.addView(slotView);
         }
