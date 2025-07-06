@@ -1,12 +1,15 @@
 package com.example.uni_cinema.ui.khuyenmai;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentActivity;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -62,7 +65,9 @@ public class PromotionAdapter extends RecyclerView.Adapter<PromotionAdapter.View
                 .into(holder.imgBanner);
 
         holder.itemView.setOnClickListener(v -> {
-            // TODO: Mở màn chi tiết — bạn có thể dùng promo.getId() để load chi tiết
+            Bundle args = new Bundle();
+            args.putString("promotion_id", promo.getId());
+            Navigation.findNavController(v).navigate(R.id.chitiet_KhuyenmaiFragment, args);
         });
     }
 

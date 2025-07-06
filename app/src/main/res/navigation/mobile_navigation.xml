@@ -78,4 +78,10 @@
         android:name="com.example.uni_cinema.ui.thongtin.DoiMKFragment"
         android:label="Chỉnh sửa thông tin"
         tools:layout="@layout/fragment_doi_m_k" />
+    <fragment
+        android:id="@+id/chitiet_KhuyenmaiFragment"
+        android:name="com.example.uni_cinema.ui.khuyenmai.Chitiet_KhuyenmaiFragment"
+        android:label="Chi tiết khuyến mãi">
+    </fragment>
+
 </navigation>
