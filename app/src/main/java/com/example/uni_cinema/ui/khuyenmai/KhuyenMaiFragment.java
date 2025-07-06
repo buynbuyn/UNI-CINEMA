@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,6 +13,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+
 import com.example.uni_cinema.R;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -44,7 +47,9 @@ public class KhuyenMaiFragment extends Fragment {
 
         adapter = new PromotionAdapter(getContext(), new ArrayList<>());
         recyclerPromotion.setAdapter(adapter);
-
+        ImageButton btnBack = view.findViewById(R.id.btn_back);
+        btnBack.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.nav_home));
         db = FirebaseFirestore.getInstance();
         loadPromotions();
     }
