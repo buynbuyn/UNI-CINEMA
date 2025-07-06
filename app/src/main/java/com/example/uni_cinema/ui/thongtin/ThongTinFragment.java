@@ -15,7 +15,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
-import com.example.uni_cinema.LoginActivity;
 import com.example.uni_cinema.MainActivity;
 import com.example.uni_cinema.R;
 import com.google.firebase.auth.FirebaseAuth;

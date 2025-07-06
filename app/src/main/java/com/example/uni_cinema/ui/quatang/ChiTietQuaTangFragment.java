@@ -1,5 +1,5 @@
 package com.example.uni_cinema.ui.quatang;
-import com.example.uni_cinema.LoginActivity;
+import com.example.uni_cinema.login.LoginActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;

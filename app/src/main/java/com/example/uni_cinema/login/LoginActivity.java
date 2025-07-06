@@ -1,4 +1,4 @@
-package com.example.uni_cinema;
+package com.example.uni_cinema.login;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,8 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.uni_cinema.MainActivity;
+import com.example.uni_cinema.R;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
@@ -19,6 +20,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText emailEditText, passwordEditText;
     Button loginButton;
     TextView goToRegisterText;
+    TextView forgotPasswordTextView;
     FirebaseAuth mAuth;
 
     @Override
@@ -31,6 +33,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         goToRegisterText = findViewById(R.id.goToRegisterText);
+        forgotPasswordTextView = findViewById(R.id.forgotPasswordText);
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         loginButton.setOnClickListener(v -> {
@@ -97,6 +100,9 @@ public class LoginActivity extends AppCompatActivity {
 
         goToRegisterText.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
+        });
+        forgotPasswordTextView.setOnClickListener(v -> {
+            startActivity(new Intent(this, QuenMKActivity.class));
         });
     }
 }
