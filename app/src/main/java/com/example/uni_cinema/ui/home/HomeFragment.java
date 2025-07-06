@@ -80,13 +80,14 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        String id = doc.getId();
                         String title = doc.getString("nameMovie");
                         String imageUrl = doc.getString("imageMovie1");
                         Long timeMovieLong = doc.getLong("timeMovie");
 
                         if (title != null && imageUrl != null && timeMovieLong != null) {
                             int timeMovie = timeMovieLong.intValue();
-                            Movie movie = new Movie(title, imageUrl);
+                            Movie movie = new Movie(id, title, imageUrl);
                             movie.setTimeMovie(timeMovie);
                             movieList.add(movie);
                         }

@@ -5,11 +5,9 @@ public class Movie {
     private String id;
     private String imageUrl; // dùng để nhận từ Firestore (ví dụ: imageMovie1)
 
-    public Movie() {
-        // Bắt buộc để Firestore có thể tự mapping dữ liệu
-    }
 
-    public Movie(String title, String imageUrl) {
+    public Movie(String id, String title, String imageUrl) {
+        this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
     }

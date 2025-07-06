@@ -68,7 +68,6 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
             Bundle bundle = new Bundle();
             bundle.putString("movieId", movie.getId()); // truyền dữ liệu sang fragment
             bundle.putString("movieTitle", movie.getTitle());
-
             Navigation.findNavController(v).navigate(R.id.nav_rap, bundle);
         });
 
