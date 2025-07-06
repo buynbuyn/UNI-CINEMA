@@ -239,7 +239,7 @@ public class DeskActivity extends AppCompatActivity {
     private Button createDeskButton(String deskId, boolean isVip, boolean isCouple, Map<String, Boolean> bookedSeats, int price) {
         Button desk = new Button(this);
         desk.setId(View.generateViewId());
-        String displayText = deskId.length() > 1 ? deskId.substring(1) : deskId;
+        String displayText = deskId.length() > 1 ? deskId.substring(6) : deskId;
         desk.setText(displayText);
 
         GridLayout.LayoutParams params = new GridLayout.LayoutParams(); // Sử dụng GridLayout.LayoutParams
@@ -290,7 +290,7 @@ public class DeskActivity extends AppCompatActivity {
             StringBuilder seatsInfo = new StringBuilder("Ghế đã chọn:\n");
             int totalPrice = 0;
             for (Desk desk : selectedDesks.values()) {
-                String displayText = desk.getIdDesk().length() > 1 ? desk.getIdDesk().substring(1) : desk.getIdDesk();
+                String displayText = desk.getIdDesk().length() > 1 ? desk.getIdDesk().substring(6) : desk.getIdDesk();
                 seatsInfo.append(displayText).append(" (").append(desk.getCategoryName()).append(", ").append(desk.getPrice()).append(" VND)\n");
                 totalPrice += desk.getPrice();
             }
