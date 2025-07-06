@@ -19,15 +19,15 @@ public class Screening {
         public int totalSeats;
         public int bookedSeats;
         public String screeningId;
+        public String screenRoomId; // Thêm trường screenRoomId
 
-
-        public TimeSlot(String screenRoomName, String timeRangeDisplay, int totalSeats, int bookedSeats, String screeningId) {
+        public TimeSlot(String screenRoomName, String timeRangeDisplay, int totalSeats, int bookedSeats, String screeningId, String screenRoomId) {
             this.screenRoomName = screenRoomName;
             this.timeRangeDisplay = timeRangeDisplay;
             this.totalSeats = totalSeats;
             this.bookedSeats = bookedSeats;
             this.screeningId = screeningId;
-
+            this.screenRoomId = screenRoomId; // Khởi tạo screenRoomId
         }
     }
 }

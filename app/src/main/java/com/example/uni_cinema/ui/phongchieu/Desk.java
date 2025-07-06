@@ -1,58 +1,37 @@
 package com.example.uni_cinema.ui.phongchieu;
 
 public class Desk {
-    private String idDesk;          // Mã số ghế từ document Desk
-    private int row;                // Hàng của ghế
-    private int column;             // Cột của ghế
-    private int state;              // Trạng thái ghế
-    private String categoryName;    // Tên thể loại từ deskCategories
-    private int price;              // Giá tiền
-    private int point;              // Điểm từ deskCategories
+    private String idDesk;
+    private String categoryName;
+    private int price;
+    private boolean isAvailable;
+    private int rowDesk;    // Hàng ghế
+    private int coloumnDesk; // Cột ghế (giữ nguyên lỗi chính tả để khớp Firebase)
 
-    public Desk() {
-        // Constructor mặc định cho Firestore
-    }
-
-    public Desk(String idDesk, String seatId, int row, int column, int state, String categoryName, int price, int point) {
+    // Constructor với 4 tham số (cho tương thích cũ, nếu cần)
+    public Desk(String idDesk, String categoryName, int price, boolean isAvailable) {
         this.idDesk = idDesk;
-        this.row = row;
-        this.column = column;
-        this.state = state;
         this.categoryName = categoryName;
         this.price = price;
-        this.point = point;
+        this.isAvailable = isAvailable;
+        this.rowDesk = 0;      // Giá trị mặc định
+        this.coloumnDesk = 0;  // Giá trị mặc định
+    }
+
+    // Constructor với 6 tham số (dùng cho dữ liệu mới từ Firebase)
+    public Desk(String idDesk, String categoryName, int price, boolean isAvailable, int rowDesk, int coloumnDesk) {
+        this.idDesk = idDesk;
+        this.categoryName = categoryName;
+        this.price = price;
+        this.isAvailable = isAvailable;
+        this.rowDesk = rowDesk;
+        this.coloumnDesk = coloumnDesk;
     }
 
     // Getters
     public String getIdDesk() { return idDesk; }
-    public int getRow() { return row; }
-    public int getColumn() { return column; }
-    public int getState() { return state; }
     public String getCategoryName() { return categoryName; }
     public int getPrice() { return price; }
-    public int getPoint() { return point; }
-
-    // Setters
-    public void setIdDesk(String idDesk) { this.idDesk = idDesk; }
-    public void setRow(int row) { this.row = row; }
-    public void setColumn(int column) { this.column = column; }
-    public void setState(int state) { this.state = state; }
-    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
-    public void setPrice(int price) { this.price = price; }
-    public void setPoint(int point) { this.point = point; }
-
-    public boolean isAvailable() { return state == 0; }
-
-    @Override
-    public String toString() {
-        return "Seat{" +
-                "idDesk='" + idDesk + '\'' +
-                ", row=" + row +
-                ", column=" + column +
-                ", state=" + state +
-                ", categoryName='" + categoryName + '\'' +
-                ", price=" + price +
-                ", point=" + point +
-                '}';
-    }
-}
+    public boolean isAvailable() { return isAvailable; }
+    public int getRowDesk() { return rowDesk; }
+    public int getColoumnDesk() { return coloumnDesk; }}
