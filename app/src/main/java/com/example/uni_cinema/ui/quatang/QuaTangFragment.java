@@ -45,21 +45,21 @@ public class QuaTangFragment extends Fragment {
         });
 
         // Nút mua vé 2D
-        view.findViewById(R.id.btn_buy_ticket_2d).setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("ticket_type", "Vé quà tặng 2D");
-            bundle.putInt("price", 120000);
-            bundle.putInt("image_res", R.drawable.ticket01);
-            navController.navigate(R.id.action_quaTangFragment_to_bankQuaTangFragment, bundle, fadeAnim);
-        });
+        //view.findViewById(R.id.btn_buy_ticket_2d).setOnClickListener(v -> {
+         //   Bundle bundle = new Bundle();
+           // bundle.putString("ticket_type", "Vé quà tặng 2D");
+            //bundle.putInt("price", 120000);
+            //bundle.putInt("image_res", R.drawable.ticket01);
+          //  navController.navigate(R.id.action_quaTangFragment_to_bankQuaTangFragment, bundle, fadeAnim);
+        //});
 
         // Nút mua vé 3D
-        view.findViewById(R.id.btn_buy_ticket_3d).setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("ticket_type", "Vé quà tặng 3D");
-            bundle.putInt("price", 220000);
-            bundle.putInt("image_res", R.drawable.ticket02);
-            navController.navigate(R.id.action_quaTangFragment_to_bankQuaTangFragment, bundle, fadeAnim);
-        });
+        //view.findViewById(R.id.btn_buy_ticket_3d).setOnClickListener(v -> {
+          //  Bundle bundle = new Bundle();
+            //bundle.putString("ticket_type", "Vé quà tặng 3D");
+            //bundle.putInt("price", 220000);
+            //bundle.putInt("image_res", R.drawable.ticket02);
+            //navController.navigate(R.id.action_quaTangFragment_to_bankQuaTangFragment, bundle, fadeAnim);
+        //});
     }
 }

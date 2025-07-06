@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.navigation.fragment.NavHostFragment;
@@ -61,10 +62,9 @@ public class Chitiet_KhuyenmaiFragment extends Fragment {
         imgBanner = view.findViewById(R.id.imgPromoDetailBanner);
 
         loadData();
-        ImageView btnBack = view.findViewById(R.id.btn_back_home);
-        btnBack.setOnClickListener(v -> {
-            NavHostFragment.findNavController(this).popBackStack();
-        });
+        ImageButton btnBack = view.findViewById(R.id.btn_back_home);
+        btnBack.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.nav_khuyen_mai));
         requireActivity().findViewById(R.id.custom_bottom_menu).setVisibility(View.GONE);
         requireActivity().findViewById(R.id.toolbar).setVisibility(View.GONE); // 👈 nếu có
     }

@@ -58,31 +58,7 @@
         android:padding="16dp">
 
         <!-- Item 1 -->
-        <LinearLayout
-            android:id="@+id/menu_home"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="12dp">
 
-            <ImageView
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:src="@drawable/movie" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:text="Trang chủ"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp" />
-        </LinearLayout>
-
-        <!-- Item 2 -->
         <LinearLayout
             android:id="@+id/menu_phim_da_xem"
             android:layout_width="wrap_content"
@@ -96,7 +72,7 @@
             <ImageView
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:src="@drawable/lichsu" />
+                android:src="@drawable/movie" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -106,6 +82,33 @@
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/menu_ve_cua_toi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageView
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:src="@drawable/tichdiem" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:text="Vé của tôi"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <!-- Item 2 -->
+
         <!-- Thông tin thành viên -->
         <LinearLayout
             android:id="@+id/menu_thong_tin"
@@ -144,13 +147,13 @@
             <ImageView
                 android:layout_width="55dp"
                 android:layout_height="55dp"
-                android:src="@drawable/tichdiem" />
+                android:src="@drawable/lichsu" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingStart="16dp"
-                android:text="Chính sach tích điểm"
+                android:text="Chính sách tích điểm"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
         </LinearLayout>

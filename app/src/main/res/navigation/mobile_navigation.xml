@@ -28,11 +28,9 @@
 
     <fragment
         android:id="@+id/nav_qua_tang"
-        android:name="com.example.uni_cinema.ui.quatang.QuaTangFragment"
+        android:name="com.example.uni_cinema.ui.voucher.VoucherFragment"
+        tools:layout="@layout/fragment_voucher"
         android:label="Quà tặng">
-        <action
-            android:id="@+id/action_quaTangFragment_to_bankQuaTangFragment"
-            app:destination="@id/bankQuaTangFragment" />
     </fragment>
 
     <fragment

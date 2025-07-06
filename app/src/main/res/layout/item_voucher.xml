@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    card_view:cardCornerRadius="12dp"
+    card_view:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Mã giảm giá -->
+        <TextView
+            android:id="@+id/tvVoucherCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mã: CODE"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#FF5722"
+            android:paddingBottom="4dp"/>
+
+        <!-- Thời gian hiệu lực -->
+        <TextView
+            android:id="@+id/tvTimeRange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hiệu lực: 01/07 - 15/07"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:paddingBottom="4dp"/>
+
+        <!-- Giá trị giảm -->
+        <TextView
+            android:id="@+id/tvDiscountValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Giảm: 50.000₫"
+            android:textSize="16sp"
+            android:textColor="#009688"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

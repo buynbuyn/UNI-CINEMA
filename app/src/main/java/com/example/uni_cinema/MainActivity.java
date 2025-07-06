@@ -152,15 +152,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupCustomDrawerMenu() {
         DrawerLayout drawer = binding.drawerLayout;
 
-        LinearLayout menuHome = findViewById(R.id.menu_home);
         LinearLayout menuPhimDaXem = findViewById(R.id.menu_phim_da_xem);
         LinearLayout menuThongTin = findViewById(R.id.menu_thong_tin);
         LinearLayout menuTichDiem = findViewById(R.id.menu_tich_diem);
 
-        menuHome.setOnClickListener(v -> {
-            navController.navigate(R.id.nav_home, null, fadeAnim);
-            drawer.closeDrawers();
-        });
+
 
         menuPhimDaXem.setOnClickListener(v -> {
             if (user != null) {
