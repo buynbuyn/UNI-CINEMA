@@ -43,8 +43,26 @@ public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.Scre
         holder.tvMovieTitle.setText(item.movieTitle);
         holder.containerSuatChieu.removeAllViews();
 
-        for (Screening.TimeSlot slot : item.timeSlots) {
-            View slotView = LayoutInflater.from(context).inflate(R.layout.item_booking_slot, holder.containerSuatChieu, false);
+        List<Screening.TimeSlot> slots = item.timeSlots;
+        LinearLayout rowLayout = null;
+
+        for (int i = 0; i < slots.size(); i++) {
+            if (i % 3 == 0) {
+                // Tạo dòng mới mỗi 3 slot
+                rowLayout = new LinearLayout(context);
+                rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+                rowLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+                rowLayout.setPadding(0, 8, 0, 8);
+                holder.containerSuatChieu.addView(rowLayout);
+            }
+
+            View slotView = LayoutInflater.from(context)
+                    .inflate(R.layout.item_booking_slot, rowLayout, false);
+
+            Screening.TimeSlot slot = slots.get(i);
             TextView tvRoom = slotView.findViewById(R.id.tvScreenRoom);
             TextView tvTime = slotView.findViewById(R.id.tvTimeRange);
             TextView tvSeats = slotView.findViewById(R.id.tvSeats);
@@ -53,17 +71,34 @@ public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.Scre
             tvTime.setText(slot.timeRangeDisplay);
             tvSeats.setText(slot.bookedSeats + "/" + slot.totalSeats + " Ghế");
 
-            // Thêm sự kiện nhấn cho slotView
             slotView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, DeskActivity.class);
-                intent.putExtra("idScreeningRoom", slot.screenRoomId); // Đảm bảo bạn đã thêm screenRoomId vào TimeSlot
-                intent.putExtra("screeningId", slot.screeningId); // Truyền screeningId
-                intent.putExtra("movieTitle", item.movieTitle); // Truyền movieTitle nếu cần
-                intent.putExtra("timeRange", slot.timeRangeDisplay); // Truyền thời gian suất chiếu nếu cần
+                intent.putExtra("idScreeningRoom", slot.screenRoomId);
+                intent.putExtra("screeningId", slot.screeningId);
+                intent.putExtra("movieTitle", item.movieTitle);
+                intent.putExtra("timeRange", slot.timeRangeDisplay);
                 context.startActivity(intent);
             });
 
-            holder.containerSuatChieu.addView(slotView);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            params.setMarginEnd(10);
+            slotView.setLayoutParams(params);
+
+            if (rowLayout != null) {
+                rowLayout.addView(slotView);
+            }
+        }
+
+        // Bù slot trống nếu dòng cuối chưa đủ 3
+        int remainder = slots.size() % 3;
+        if (remainder != 0 && rowLayout != null) {
+            for (int j = 0; j < 3 - remainder; j++) {
+                View emptyView = new View(context);
+                LinearLayout.LayoutParams emptyParams = new LinearLayout.LayoutParams(
+                        0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                rowLayout.addView(emptyView, emptyParams);
+            }
         }
     }
 

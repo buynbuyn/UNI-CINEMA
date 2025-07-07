@@ -10,5 +10,6 @@
     <color name="cream_soft">#FAF6EB</color>
     <color name="grey">#F2F3F5</color>
     <color name="dimgrey">#696969</color>
-    <color name="primaryColor">#FF4081</color> <!-- hoặc màu bạn thích -->
+    <color name="darkred">#8B0000</color>
+    <color name="ningtblue">#191970</color> <!-- hoặc màu bạn thích -->
 </resources>

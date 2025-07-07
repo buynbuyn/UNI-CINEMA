@@ -2,6 +2,7 @@ package com.example.uni_cinema.ui.voucher;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,36 +70,58 @@ public class VoucherFragment extends Fragment {
         String uid = mAuth.getCurrentUser().getUid();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        Log.d("VOUCHER_DEBUG", "🔍 Bắt đầu load voucher cho uid: " + uid);
+
         db.collection("discounts")
                 .whereEqualTo("idUser", uid)
                 .get()
                 .addOnSuccessListener(result -> {
                     voucherList.clear();
+                    Log.d("VOUCHER_DEBUG", "📦 Tổng số documents tìm thấy: " + result.size());
+
                     for (QueryDocumentSnapshot doc : result) {
-                        String code = doc.getString("code");
+                        try {
+                            String code = doc.getString("code");
+                            Log.d("VOUCHER_DEBUG", "➡️ Đang xử lý voucher code: " + code);
 
-                        // Lấy timestamp từ Firestore
-                        Timestamp tsStart = doc.getTimestamp("dateTimeStart");
-                        Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
+                            Timestamp tsStart = doc.getTimestamp("dateTimeStart");
+                            Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
+                            Log.d("VOUCHER_DEBUG", "▶️ Voucher ID: " + doc.getId()
+                                    + " | dateTimeEnd = " + tsEnd.toDate()
+                                    + " | now = " + new Date());
+                            if (tsEnd == null || tsEnd.toDate().before(new Date())) {
+                                Log.w("VOUCHER_FILTER", "⛔ Bỏ qua voucher hết hạn: " + doc.getId());
+                                continue;
+                            }
 
-                        // Chuyển thành Date → format thành chuỗi
-                        Date startDate = tsStart != null ? tsStart.toDate() : null;
-                        Date endDate = tsEnd != null ? tsEnd.toDate() : null;
+                            Date startDate = tsStart != null ? tsStart.toDate() : null;
+                            Date endDate = tsEnd != null ? tsEnd.toDate() : null;
 
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                        String timeStart = startDate != null ? sdf.format(startDate) : "Không rõ";
-                        String timeEnd = endDate != null ? sdf.format(endDate) : "Không rõ";
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                            String timeStart = startDate != null ? sdf.format(startDate) : "Không rõ";
+                            String timeEnd = endDate != null ? sdf.format(endDate) : "Không rõ";
 
-                        Long discountLong = doc.getLong("priceDiscount");
-                        int discount = discountLong != null ? discountLong.intValue() : 0;
+                            Long discountLong = doc.getLong("priceDiscount");
+                            int discount = discountLong != null ? discountLong.intValue() : 0;
 
-                        Voucher voucher = new Voucher(code, timeStart, timeEnd, discount);
-                        voucherList.add(voucher);
+                            Log.d("VOUCHER_DEBUG", "✅ Voucher hợp lệ: code=" + code +
+                                    ", discount=" + discount +
+                                    ", timeStart=" + timeStart +
+                                    ", timeEnd=" + timeEnd);
+
+                            Voucher voucher = new Voucher(code, timeStart, timeEnd, discount);
+                            voucherList.add(voucher);
+
+                        } catch (Exception e) {
+                            Log.e("VOUCHER_ERROR", "❌ Lỗi khi xử lý voucher: " + doc.getId(), e);
+                        }
                     }
 
                     voucherAdapter.notifyDataSetChanged();
+                    Log.d("VOUCHER_DEBUG", "🎉 Cập nhật adapter xong. Tổng voucher = " + voucherList.size());
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("VOUCHER_ERROR", "💥 Lỗi khi truy vấn Firestore: " + e.getMessage(), e);
                     Toast.makeText(getContext(), "Lỗi khi tải voucher: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }

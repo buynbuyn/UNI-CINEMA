@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.voucher;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,10 +31,13 @@ public class VoucherAdapter extends RecyclerView.Adapter<VoucherAdapter.VoucherV
     @Override
     public void onBindViewHolder(@NonNull VoucherViewHolder holder, int position) {
         Voucher voucher = voucherList.get(position);
+        String timeStart = voucher.getTimeStart() != null ? voucher.getTimeStart() : "Không rõ";
+        String timeEnd = voucher.getTimeEnd() != null ? voucher.getTimeEnd() : "Không rõ";
 
         holder.tvCode.setText("Mã: " + voucher.getCode());
         holder.tvTime.setText("Hiệu lực: " + voucher.getTimeStart() + " - " + voucher.getTimeEnd());
         holder.tvDiscount.setText("Giảm: " + voucher.getDiscount() + "₫");
+
     }
 
     @Override

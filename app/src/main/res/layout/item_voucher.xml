@@ -21,7 +21,7 @@
             android:text="Mã: CODE"
             android:textStyle="bold"
             android:textSize="18sp"
-            android:textColor="#FF5722"
+            android:textColor="@color/darkred"
             android:paddingBottom="4dp"/>
 
         <!-- Thời gian hiệu lực -->
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:text="Giảm: 50.000₫"
             android:textSize="16sp"
-            android:textColor="#009688"
+            android:textColor="#4682B4"
             android:textStyle="bold" />
 
     </LinearLayout>
