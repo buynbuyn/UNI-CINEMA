@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
+import java.util.Date;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -15,7 +15,7 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.google.firebase.Timestamp;
 import com.example.uni_cinema.R;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -86,6 +86,10 @@ public class PhimFragment extends Fragment {
                             .addOnSuccessListener(movieSnapshot -> {
                                 movieList.clear();
                                 for (DocumentSnapshot doc : movieSnapshot.getDocuments()) {
+                                    Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
+                                    if (tsEnd == null || tsEnd.toDate().before(new Date())) {
+                                        continue;
+                                    }
                                     String id = doc.getId();
                                     String title = doc.getString("nameMovie");
                                     String imageUrl = doc.getString("imageMovie1");

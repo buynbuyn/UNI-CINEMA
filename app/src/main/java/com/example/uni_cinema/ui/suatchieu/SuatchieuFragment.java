@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -124,7 +125,7 @@ public class SuatchieuFragment extends Fragment {
                         Map<String, List<Screening.TimeSlot>> movieSlotMap = new HashMap<>();
                         Set<String> roomIdSet = new HashSet<>();
                         List<DocumentSnapshot> screeningDocs = new ArrayList<>();
-
+                        Date now = new Date();
                         for (DocumentSnapshot doc : snapshot) {
                             String movieIdInDoc = doc.getString("idMovie");
                             String screenRoomId = doc.getString("idScreenRoom");

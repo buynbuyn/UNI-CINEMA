@@ -22,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class KhuyenMaiFragment extends Fragment {
@@ -61,14 +62,19 @@ public class KhuyenMaiFragment extends Fragment {
                 .addOnSuccessListener(querySnapshot -> {
                     List<Promotion> promotionList = new ArrayList<>();
                     Log.d("KHUYENMAI", "🔥 Tổng số documents: " + querySnapshot.size());
-
+                    Date now = new Date();
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Timestamp endDate = doc.getTimestamp("endDate");
+
+                        // Bỏ nếu thiếu endDate hoặc đã hết hạn
+                        if (endDate == null || endDate.toDate().before(now)) {
+                            continue;
+                        }
                         String id = doc.getId();
                         String title = doc.getString("title");
                         String description = doc.getString("description");
                         String bannerImage = doc.getString("bannerImage");
                         Timestamp startDate = doc.getTimestamp("startDate");
-                        Timestamp endDate = doc.getTimestamp("endDate");
 
                         Log.d("KHUYENMAI", "📄 docId: " + id);
 

@@ -19,11 +19,13 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.databinding.FragmentHomeBinding;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class HomeFragment extends Fragment {
@@ -80,6 +82,10 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Timestamp tsEnd = doc.getTimestamp("dateTimeEnd");
+                        if (tsEnd == null || tsEnd.toDate().before(new Date())) {
+                            continue;
+                        }
                         String id = doc.getId();
                         String title = doc.getString("nameMovie");
                         String imageUrl = doc.getString("imageMovie1");
