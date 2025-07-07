@@ -55,18 +55,14 @@ public class SuatchieuFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_suatchieu, container, false);
     }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         if (getActivity() instanceof AppCompatActivity) {
             ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
         }
-
         View bottomMenu = requireActivity().findViewById(R.id.custom_bottom_menu);
         if (bottomMenu != null) bottomMenu.setVisibility(View.GONE);
-
         tvTheaterName = view.findViewById(R.id.tvTheaterName);
         recyclerDate = view.findViewById(R.id.recyclerDate);
         recyclerScreening = view.findViewById(R.id.recyclerScreening);
@@ -78,12 +74,10 @@ public class SuatchieuFragment extends Fragment {
             movieId = args.getString("movieId");
             movieTitle = args.getString("movieTitle");
             tvTheaterName.setText(args.getString("theaterName", "RẠP CHIẾU PHIM"));
-            Log.d("DEBUG_BUNDLE", "🎯 theaterId=" + theaterId + ", movieId=" + movieId + ", movieTitle=" + movieTitle);
         }
 
         recyclerDate.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         recyclerScreening.setLayoutManager(new LinearLayoutManager(getContext()));
-
         selectedDate = LocalDate.now();
         List<LocalDate> dateList = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
@@ -96,10 +90,8 @@ public class SuatchieuFragment extends Fragment {
             loadScreeningsByDate(date);
         });
         recyclerDate.setAdapter(dateAdapter);
-
         screeningAdapter = new ScreeningAdapter(requireContext(), new ArrayList<>());
         recyclerScreening.setAdapter(screeningAdapter);
-
         loadScreeningsByDate(selectedDate);
 
         ImageButton btnBack = view.findViewById(R.id.btn_back_home);
@@ -107,7 +99,6 @@ public class SuatchieuFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.nav_rap)
         );
     }
-
     private void loadScreeningsByDate(LocalDate date) {
         db.collection("movies").get().addOnSuccessListener(movieSnap -> {
             Map<String, String> movieIdToName = new HashMap<>();
@@ -116,7 +107,6 @@ public class SuatchieuFragment extends Fragment {
                 String name = movieDoc.getString("nameMovie");
                 movieIdToName.put(id, name);
             }
-
             db.collection("screening")
                     .whereEqualTo("stateScreening", true)
                     .get()
@@ -130,12 +120,6 @@ public class SuatchieuFragment extends Fragment {
                             String movieIdInDoc = doc.getString("idMovie");
                             String screenRoomId = doc.getString("idScreenRoom");
                             Timestamp tsStart = doc.getTimestamp("dateTimeStart");
-
-                            Log.d("CHECK_DOC", "📍 screeningId = " + doc.getId()
-                                    + "\n→ idMovie = " + movieIdInDoc
-                                    + "\n→ screenRoomId = " + screenRoomId
-                                    + "\n→ tsStart = " + tsStart);
-
                             if (tsStart == null || screenRoomId == null) {
                                 Log.d("FILTER_OUT", "⛔ Bỏ vì thiếu tsStart hoặc screenRoomId");
                                 continue;
@@ -151,19 +135,13 @@ public class SuatchieuFragment extends Fragment {
                                 Log.d("FILTER_OUT", "⛔ Bỏ vì khác movieId");
                                 continue;
                             }
-
                             screeningDocs.add(doc);
                             roomIdSet.add(screenRoomId);
                         }
-
-                        Log.d("DEBUG_SCREENING", "✅ Tổng suất chiếu hợp lệ: " + screeningDocs.size());
-                        Log.d("DEBUG_ROOMIDS", "📦 roomIdSet = " + roomIdSet);
-
                         if (screeningDocs.isEmpty()) {
                             screeningAdapter.updateData(result);
                             return;
                         }
-
                         db.collection("screeningRoom")
                                 .whereIn("__name__", new ArrayList<>(roomIdSet))
                                 .get()
