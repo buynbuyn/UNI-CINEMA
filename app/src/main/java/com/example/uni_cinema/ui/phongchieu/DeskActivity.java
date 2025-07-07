@@ -27,11 +27,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 
 public class DeskActivity extends AppCompatActivity {
 
     private GridLayout seatContainer; // Sửa thành GridLayout để khớp với XML
     private TextView infoTextView;
+    private TextView totalPriceTextView;
     private Button confirmerButton; // Sửa chính tả, dùng confirmerButton
     private List<Desk> deskList;
     private Map<String, Desk> selectedDesks; // Sửa thành Map để tránh trùng lặp ghế
@@ -88,7 +92,7 @@ public class DeskActivity extends AppCompatActivity {
         }
         infoTextView = findViewById(R.id.info_text_view);
         confirmerButton = findViewById(R.id.confirm_button); // Sửa thành confirmerButton
-
+        totalPriceTextView = findViewById(R.id.total_price_text);
         // Cập nhật giao diện nếu cần
         infoTextView.setText("Vui lòng chọn ghế");
     }
@@ -270,36 +274,60 @@ public class DeskActivity extends AppCompatActivity {
 
         desk.setOnClickListener(v -> {
             Desk deskData = deskList.stream().filter(d -> d.getIdDesk().equals(deskId)).findFirst().orElse(null);
+            // K: đã chỉnh giới hạn 6 ghế
             if (deskData != null && deskData.isAvailable()) {
-                if (selectedDesks.containsKey(deskId)) { // Kiểm tra bằng key
+                if (selectedDesks.containsKey(deskId)) {
+                    // Bỏ chọn ghế
                     selectedDesks.remove(deskId);
                     desk.setBackgroundColor((Integer) desk.getTag());
                 } else {
-                    selectedDesks.put(deskId, deskData); // Thêm vào Map
+                    // Kiểm tra nếu đã chọn đủ 6 ghế
+                    if (selectedDesks.size() >= 6) {
+                        Toast.makeText(this, "Bạn chỉ được chọn tối đa 6 ghế", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    // Chọn thêm ghế
+                    selectedDesks.put(deskId, deskData);
                     desk.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"));
                 }
                 updateInfoText();
             }
+
         });
 
         return desk;
     }
 
     private void updateInfoText() {
+        // K: chỉnh sửa hiển thị thông tin ghế đã chọn
         if (!selectedDesks.isEmpty()) {
-            StringBuilder seatsInfo = new StringBuilder("Ghế đã chọn:\n");
+            StringBuilder seatNames = new StringBuilder();
             int totalPrice = 0;
+
             for (Desk desk : selectedDesks.values()) {
-                String displayText = desk.getIdDesk().length() > 1 ? desk.getIdDesk().substring(6) : desk.getIdDesk();
-                seatsInfo.append(displayText).append(" (").append(desk.getCategoryName()).append(", ").append(desk.getPrice()).append(" VND)\n");
+                String displayText = desk.getIdDesk().length() > 6 ? desk.getIdDesk().substring(6) : desk.getIdDesk();
+                seatNames.append(displayText).append(", ");
                 totalPrice += desk.getPrice();
             }
-            seatsInfo.append("Tổng giá: ").append(totalPrice).append(" VND");
-            infoTextView.setText(seatsInfo.toString());
+
+            // Xoá dấu phẩy cuối
+            if (seatNames.length() > 2) {
+                seatNames.setLength(seatNames.length() - 2);
+            }
+
+            infoTextView.setText("Ghế: " + seatNames);
+            //K: định dạng giá tiền chứ 3 chấm là 1 số
+            NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+            String formattedPrice = formatter.format(totalPrice);
+            totalPriceTextView.setText("Tạm tính: " + formattedPrice + " VND");
+
         } else {
-            infoTextView.setText("Vui lòng chọn ghế");
+            infoTextView.setText("Ghế:");
+            totalPriceTextView.setText("Tạm tính: 0 VND");
         }
     }
+
+
 
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
