@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.phongchieu;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.uni_cinema.R;
+import com.example.uni_cinema.databinding.ActivityPaymentBinding;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -27,6 +29,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.example.uni_cinema.ui.thanhtoan.PaymentActivity;
 
 public class DeskActivity extends AppCompatActivity {
 
@@ -36,7 +39,7 @@ public class DeskActivity extends AppCompatActivity {
     private List<Desk> deskList;
     private Map<String, Desk> selectedDesks; // Sửa thành Map để tránh trùng lặp ghế
     private FirebaseFirestore db;
-    private String screeningId, screenRoomId;
+    private String screeningId, screenRoomId, movie, dateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +52,8 @@ public class DeskActivity extends AppCompatActivity {
 
         screeningId = getIntent().getStringExtra("screeningId");
         screenRoomId = getIntent().getStringExtra("idScreeningRoom");
+        movie = getIntent().getStringExtra("movieTitle");
+        dateTime = getIntent().getStringExtra("timeRange");
         Log.d("DESK_DEBUG", "Received screeningId: " + screeningId + ", screenRoomId: " + screenRoomId);
 
         deskList = new ArrayList<>();
@@ -60,17 +65,29 @@ public class DeskActivity extends AppCompatActivity {
             if (selectedDesks.isEmpty()) {
                 Toast.makeText(this, "Vui lòng chọn ghế", Toast.LENGTH_SHORT).show();
             } else {
-                StringBuilder selectedSeats = new StringBuilder("Ghế đã chọn: ");
                 int totalPrice = 0;
-                for (Desk desk : selectedDesks.values()) { // Dùng values() để lấy danh sách Desk
-                    String displayText = desk.getIdDesk().length() > 1 ? desk.getIdDesk().substring(1) : desk.getIdDesk();
-                    selectedSeats.append(displayText).append(" ");
+                ArrayList<String> selectedDeskIds = new ArrayList<>();
+
+                for (Desk desk : selectedDesks.values()) {
+                    selectedDeskIds.add(desk.getIdDesk());
                     totalPrice += desk.getPrice();
                 }
-                selectedSeats.append("\nTổng giá: ").append(totalPrice).append(" VND");
-                Toast.makeText(this, selectedSeats.toString(), Toast.LENGTH_LONG).show();
+
+                Bundle bundle = new Bundle();
+                bundle.putStringArrayList("selectedDeskIds", selectedDeskIds);
+                bundle.putInt("totalPrice", totalPrice);
+
+                // Add the movie and screening room details to the bundle
+                bundle.putString("movieName", movie);
+                bundle.putString("screeningDateTime", dateTime);
+                bundle.putString("screenRoomName", screeningId);
+
+                Intent intent = new Intent(DeskActivity.this, PaymentActivity.class);
+                intent.putExtras(bundle);
+                startActivity(intent);
             }
         });
+
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());

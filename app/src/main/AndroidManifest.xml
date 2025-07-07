@@ -14,33 +14,34 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UNI_CINEMA"
         tools:targetApi="31">
-
+        <activity
+            android:name=".ui.thanhtoan.PaymentActivity"
+            android:exported="true"
+            android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
         <activity
             android:name=".ui.phongchieu.DeskActivity"
             android:exported="false"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
-
         <activity
-            android:name=".ui.thanhtoan.ThanhToanResult"
+            android:name=".ui.thanhtoan.PaymentResultActivity"
+            android:autoVerify="true"
             android:exported="true"
             android:launchMode="singleTop">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="payment-result"
                     android:scheme="uni_cinema" />
             </intent-filter>
-
         </activity>
-
         <activity
             android:name=".ui.phim.MovieDetailsActivity"
             android:exported="true"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -48,27 +49,24 @@
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".login.RegisterActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
-
         <activity
             android:name=".login.LoginActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
-
         <activity
             android:name=".login.QuenMKActivity"
             android:exported="true"
             android:theme="@style/Theme.UNI_CINEMA.NoActionBar" />
-
     </application>
 
 </manifest>

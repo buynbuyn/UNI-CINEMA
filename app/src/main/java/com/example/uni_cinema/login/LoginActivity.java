@@ -1,6 +1,7 @@
 package com.example.uni_cinema.login;
 
 import android.content.Intent;
+import android.content.SharedPreferences; // Import SharedPreferences
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -51,6 +52,12 @@ public class LoginActivity extends AppCompatActivity {
 
                         // Lấy UID của người dùng hiện tại
                         String uid = mAuth.getCurrentUser().getUid();
+
+                        // Store UID in SharedPreferences
+                        SharedPreferences sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putString("user_uid", uid);
+                        editor.apply(); // Use apply() for asynchronous saving
 
                         // Lấy tài liệu của người dùng từ Firestore
                         db.collection("users").document(uid).get()
