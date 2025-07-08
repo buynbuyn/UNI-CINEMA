@@ -22,6 +22,19 @@ android {
 
 
     buildTypes {
+        debug {
+            buildConfigField ("String", "VNP_TMN_CODE", "\"YYEMP9YC\"")
+            buildConfigField ("String", "VNP_HASH_SECRET", "\"ANDG1IXPFGZL9MBYJDJRUMDZ83L79GCJ\"")
+            buildConfigField ("String", "VNP_URL", "\"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html\"")
+            buildConfigField ("String", "VNP_RETURN_URL", "\"uni_cinema://payment-result\"")
+        }
+        release {
+            android.buildFeatures.buildConfig = true
+            buildConfigField ("String", "VNP_TMN_CODE", "\"YOUR_PRODUCTION_TMN_CODE\"")
+            buildConfigField ("String", "VNP_HASH_SECRET", "\"YOUR_PRODUCTION_HASH_SECRET\"")
+            buildConfigField ("String", "VNP_URL", "\"https://pay.vnpay.vn/vpcpay.html\"")
+            buildConfigField ("String", "VNP_RETURN_URL", "\"uni_cinema://payment-result\"")
+        }
         release {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

@@ -12,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.uni_cinema.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.Timestamp;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,6 +71,16 @@ public class RegisterActivity extends AppCompatActivity {
                         userData.put("birthday", "");
                         userData.put("phone", "");
                         userData.put("address", "");
+                        userData.put("checkBuy", false);
+
+                        // Thiết lập ngày bắt đầu và kết thúc
+                        Calendar calendar = Calendar.getInstance();
+                        userData.put("dateStart", new Timestamp(calendar.getTime()));
+                        calendar.add(Calendar.MONTH, 4);
+                        userData.put("dateEnd", new Timestamp(calendar.getTime()));
+
+                        userData.put("idMemberShip", "idMemberShip1");
+                        userData.put("point", 0);
 
                         // Lưu vào Firestore
                         db.collection("users").document(uid)
