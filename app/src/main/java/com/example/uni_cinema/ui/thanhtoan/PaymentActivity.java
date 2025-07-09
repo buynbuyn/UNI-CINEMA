@@ -612,7 +612,7 @@ public class PaymentActivity extends AppCompatActivity {
         intent.putExtra("screeningDateTime", screeningDateTime);
         intent.putExtra("screenRoomName", screenRoomName);
         intent.putExtra("payment_success", true);
-        intent.putStringArrayListExtra("selectedDeskIds", filteredDeskIds);
+        intent.putStringArrayListExtra("selectedDeskIds", selectedDeskIds);
         intent.putExtra("idMethodPayment", selectedPaymentMethod);
         startActivity(intent);
             }

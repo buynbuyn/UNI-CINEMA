@@ -30,6 +30,7 @@ public class PaymentResultActivity extends AppCompatActivity {
     private TextView tvMovieName, tvDateTime, tvScreenRoom, tvSelectedSeats, tvTotalAmount;
     private TextView tvPaymentStatus, tvPaymentMessage;
     private TextView tvMomoTransactionId, tvMomoResponseCode, tvMomoMessage;
+    private TextView tvPaymentMethod, tvUserId; // Thêm các trường mới
     private ImageButton btnBack;
     private android.widget.Button btnCompletePayment;
 
@@ -40,6 +41,10 @@ public class PaymentResultActivity extends AppCompatActivity {
     private String movieName;
     private String screeningDateTime;
     private String screenRoomName;
+    private String orderId;
+    private String idUser;
+    private boolean paymentSuccess;
+    private String idMethodPayment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +98,10 @@ public class PaymentResultActivity extends AppCompatActivity {
                 screenRoomName = extras.getString("screenRoomName", "N/A");
                 selectedDeskCategories = extras.getStringArrayList("selectedDeskCategories");
                 selectedDeskPrices = extras.getIntegerArrayList("selectedDeskPrices");
+                orderId = extras.getString("orderId", "N/A");
+                idUser = extras.getString("idUser", "N/A");
+                paymentSuccess = extras.getBoolean("payment_success", false);
+                idMethodPayment = extras.getString("idMethodPayment", "N/A");
 
                 if (selectedDeskIds == null) selectedDeskIds = new ArrayList<>();
                 if (selectedDeskCategories == null) selectedDeskCategories = new ArrayList<>();
@@ -141,6 +150,13 @@ public class PaymentResultActivity extends AppCompatActivity {
         if (tvTotalAmount != null) {
             tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", (double) totalAmount));
         }
+
+        if (tvPaymentMethod != null) {
+            tvPaymentMethod.setText("Phương thức thanh toán: " + idMethodPayment);
+        }
+        if (tvUserId != null) {
+            tvUserId.setText("ID Người dùng: " + idUser);
+        }
     }
 
     private void handlePaymentResult() {
@@ -158,6 +174,12 @@ public class PaymentResultActivity extends AppCompatActivity {
 
             displayPaymentResult(resultCode, orderId, amount, orderInfo, transId, message);
 
+            if (orderId != null && !orderId.isEmpty()) {
+                verifyPaymentWithServer(orderId);
+            }
+        } else if (paymentSuccess) {
+            // Xử lý khi chuyển trực tiếp từ PaymentActivity với payment_success
+            displayPaymentResult("0", orderId, String.valueOf(totalAmount), "Thanh toán vé xem phim", null, "Thanh toán thành công qua " + idMethodPayment);
             if (orderId != null && !orderId.isEmpty()) {
                 verifyPaymentWithServer(orderId);
             }
@@ -179,23 +201,24 @@ public class PaymentResultActivity extends AppCompatActivity {
         if (resultCode != null) {
             switch (resultCode) {
                 case "0":
+                case "00": // Thêm cho VNPay
                     statusMessage = "Thanh toán thành công!";
-                    detailedMessage = "Giao dịch của bạn đã được thực hiện thành công qua MOMO.";
+                    detailedMessage = "Giao dịch của bạn đã được thực hiện thành công qua " + idMethodPayment + ".";
                     statusColor = android.R.color.holo_green_dark;
                     break;
                 case "1":
                     statusMessage = "Giao dịch thất bại";
-                    detailedMessage = "Giao dịch MOMO không thành công. Vui lòng thử lại.";
+                    detailedMessage = "Giao dịch " + idMethodPayment + " không thành công. Vui lòng thử lại.";
                     statusColor = android.R.color.holo_red_dark;
                     break;
                 case "3":
                     statusMessage = "Giao dịch bị hủy";
-                    detailedMessage = "Bạn đã hủy giao dịch MOMO.";
+                    detailedMessage = "Bạn đã hủy giao dịch " + idMethodPayment + ".";
                     statusColor = android.R.color.holo_orange_dark;
                     break;
                 default:
                     statusMessage = "Giao dịch không thành công";
-                    detailedMessage = "Có lỗi xảy ra trong quá trình thanh toán MOMO. Mã lỗi: " + resultCode;
+                    detailedMessage = "Có lỗi xảy ra trong quá trình thanh toán " + idMethodPayment + ". Mã lỗi: " + resultCode;
                     statusColor = android.R.color.holo_red_dark;
                     break;
             }
@@ -204,9 +227,9 @@ public class PaymentResultActivity extends AppCompatActivity {
         tvPaymentStatus.setText(statusMessage);
         tvPaymentStatus.setTextColor(getResources().getColor(statusColor, getTheme()));
         tvPaymentMessage.setText(detailedMessage);
-        tvMomoTransactionId.setText("Mã giao dịch MOMO: " + (transId != null ? transId : "N/A"));
-        tvMomoResponseCode.setText("Mã phản hồi MOMO: " + (resultCode != null ? resultCode : "N/A"));
-        tvMomoMessage.setText("Thông tin đơn hàng MOMO: " + (orderInfo != null ? orderInfo : "N/A"));
+        tvMomoTransactionId.setText("Mã giao dịch " + idMethodPayment + ": " + (transId != null ? transId : "N/A"));
+        tvMomoResponseCode.setText("Mã phản hồi " + idMethodPayment + ": " + (resultCode != null ? resultCode : "N/A"));
+        tvMomoMessage.setText("Thông tin đơn hàng " + idMethodPayment + ": " + (orderInfo != null ? orderInfo : "N/A"));
 
         if (amount != null && !amount.isEmpty()) {
             try {
@@ -241,7 +264,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                     String status = json.optString("status", "UNKNOWN");
 
                     runOnUiThread(() -> {
-                        if (status.equals("SUCCESS")) {
+                        if ("SUCCESS".equals(status)) {
                             Toast.makeText(this, "Xác nhận từ server: Thanh toán thành công!", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(this, "Xác nhận từ server: Giao dịch chưa hoàn tất hoặc không tìm thấy.", Toast.LENGTH_LONG).show();
