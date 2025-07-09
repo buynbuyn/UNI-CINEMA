@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -135,10 +136,28 @@ public class PaymentResultActivity extends AppCompatActivity {
 
     private void loadOrderInfoFromSharedPreferences() {
         SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
+        orderId = prefs.getString("orderId", "N/A");
+        idUser = prefs.getString("idUser", "N/A");
+        totalAmount = prefs.getInt("totalPrice", 0); // Chuyển từ long sang int
         movieName = prefs.getString("movieName", "N/A");
         screeningDateTime = prefs.getString("screeningDateTime", "N/A");
         screenRoomName = prefs.getString("screenRoomName", "N/A");
-        totalAmount = prefs.getInt("totalAmount", 0);
+        paymentSuccess = prefs.getBoolean("payment_success", false);
+        idMethodPayment = prefs.getString("idMethodPayment", "N/A");
+        String selectedDeskIdsStr = prefs.getString("selectedDeskIds", "");
+        selectedDeskIds = new ArrayList<>(Arrays.asList(selectedDeskIdsStr.split(",")));
+        if (selectedDeskIds.contains("")) selectedDeskIds.remove(""); // Xóa phần tử rỗng nếu có
+
+        // Lưu ý: selectedDeskCategories và selectedDeskPrices không được lưu trong SharedPreferences trước đó,
+        // nên cần xử lý thủ công hoặc lấy từ nơi khác nếu có
+        selectedDeskCategories = new ArrayList<>();
+        selectedDeskPrices = new ArrayList<>();
+        if (!selectedDeskIds.isEmpty()) {
+            for (int i = 0; i < selectedDeskIds.size(); i++) {
+                selectedDeskCategories.add("Standard"); // Giá trị mặc định
+                selectedDeskPrices.add(0); // Giá mặc định, cần cập nhật nếu có
+            }
+        }
     }
 
     private void displayOrderInfo() {
