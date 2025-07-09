@@ -82,8 +82,6 @@ public class PaymentResultActivity extends AppCompatActivity {
             tvMomoTransactionId = findViewById(R.id.tv_momo_transaction_id);
             tvMomoResponseCode = findViewById(R.id.tv_momo_response_code);
             tvMomoMessage = findViewById(R.id.tv_momo_message);
-            tvPaymentMethod = findViewById(R.id.tv_payment_method);
-            tvUserId = findViewById(R.id.tv_user_id);
             btnBack = findViewById(R.id.btn_back_result);
             btnCompletePayment = findViewById(R.id.btn_complete_payment);
 
