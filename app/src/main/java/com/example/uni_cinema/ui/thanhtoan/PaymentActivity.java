@@ -302,7 +302,31 @@ public class PaymentActivity extends AppCompatActivity {
                     }
 
                     String category = i < selectedDeskCategories.size() ? selectedDeskCategories.get(i) : "N/A";
-                    int price = i < selectedDeskPrices.size() ? selectedDeskPrices.get(i) : 0;
+                    int price;
+                    if (i < selectedDeskPrices.size() && selectedDeskPrices.get(i) > 0) {
+                        price = selectedDeskPrices.get(i);
+                    } else {
+                        // Tính giá dựa vào ký tự đầu của seatId
+                        String rawSeatId = selectedDeskIds.get(i);
+                        String cleanedSeatId = rawSeatId.replace("idDesk", "");
+                        char rowChar = cleanedSeatId.charAt(0); // Lấy ký tự đầu (A, B, C,...)
+
+                        switch (rowChar) {
+                            case 'A': case 'B': case 'C':
+                                price = 60000;
+                                break;
+                            case 'D': case 'E': case 'F':
+                            case 'G': case 'H': case 'I':
+                                price = 80000;
+                                break;
+                            case 'J':
+                                price = 120000;
+                                break;
+                            default:
+                                price = 0; // Giá mặc định nếu không khớp
+                                break;
+                        }
+                    }
 
                     seatsInfo.append(seatId)
                             .append(" (")
