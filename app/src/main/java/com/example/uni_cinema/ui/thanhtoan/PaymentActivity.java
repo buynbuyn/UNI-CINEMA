@@ -18,6 +18,7 @@ import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -82,6 +83,20 @@ public class PaymentActivity extends AppCompatActivity {
             finish();
             return;
         }
+        FirebaseFirestore.getInstance().collection("orders")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    int count = queryDocumentSnapshots.size();
+                    currentOrderReferenceId = "idOrder" + String.format("%027d", count + 1);
+
+                    Log.d(TAG, "Generated idOrder: " + currentOrderReferenceId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Lỗi tạo idOrder: " + e.getMessage());
+                    Toast.makeText(this, "Không thể tạo đơn hàng.", Toast.LENGTH_SHORT).show();
+                    resetPaymentState();
+                });
+
     }
 
     private void debugIntentData() {
@@ -300,8 +315,6 @@ public class PaymentActivity extends AppCompatActivity {
         isPaymentInProgress = true;
         btnConfirmPayment.setEnabled(false);
         btnConfirmPayment.setText("Đang xử lý...");
-
-        currentOrderReferenceId = "MOMO" + System.currentTimeMillis();
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();

@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
-import java.text.DecimalFormat;
 
 public class DeskActivity extends AppCompatActivity {
 
@@ -102,7 +101,7 @@ public class DeskActivity extends AppCompatActivity {
         seatContainer = findViewById(R.id.seat_container);
         coupleSeatContainer = findViewById(R.id.couple_seat_container);
         infoTextView = findViewById(R.id.info_text_view);
-        totalPriceTextView = findViewById(R.id.total_price_text); // Initialize totalPriceTextView
+        totalPriceTextView = findViewById(R.id.total_price_text);
         confirmerButton = findViewById(R.id.confirm_button);
 
         if (seatContainer == null || coupleSeatContainer == null || infoTextView == null || totalPriceTextView == null || confirmerButton == null) {
@@ -124,7 +123,7 @@ public class DeskActivity extends AppCompatActivity {
         }
 
         seatContainer.removeAllViews();
-        coupleSeatContainer.removeAllViews(); // Clear coupleSeatContainer
+        coupleSeatContainer.removeAllViews();
         deskList.clear();
         selectedDesks.clear();
 
@@ -227,17 +226,61 @@ public class DeskActivity extends AppCompatActivity {
     }
 
     private void loadBookedSeatsAndRender() {
-        db.collection("bookings")
+        // Create a set to hold all booked seat IDs
+        Map<String, Boolean> bookedSeats = new HashMap<>();
+
+        // Task 1: Fetch booked seats from the "bookings" collection
+        Task<Void> bookingsTask = db.collection("bookings")
                 .whereEqualTo("screeningId", screeningId)
                 .get()
-                .addOnSuccessListener(bookingsSnapshot -> {
-                    Map<String, Boolean> bookedSeats = new HashMap<>();
-                    for (QueryDocumentSnapshot doc : bookingsSnapshot) {
-                        String seatId = doc.getString("seatId");
-                        if (seatId != null) bookedSeats.put(seatId, true);
+                .continueWith(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot doc : task.getResult()) {
+                            String seatId = doc.getString("seatId");
+                            if (seatId != null) bookedSeats.put(seatId, true);
+                        }
+                        Log.d("DESK_DEBUG", "Booked seats from bookings: " + bookedSeats.keySet());
                     }
-                    Log.d("DESK_DEBUG", "Booked seats: " + bookedSeats.keySet());
+                    return null;
+                });
 
+        // Task 2: Fetch booked seats from the "orders" collection where screenRoomName matches screeningId
+        Task<Void> ordersTask = db.collection("orders")
+                .whereEqualTo("screenRoomName", screeningId)
+                .whereEqualTo("stateOrder", true)
+                .get()
+                .continueWith(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot orderDoc : task.getResult()) {
+                            db.collection("orders").document(orderDoc.getId())
+                                    .collection("seats").document("seat_details")
+                                    .get()
+                                    .addOnSuccessListener(seatDoc -> {
+                                        if (seatDoc.exists()) {
+                                            Map<String, Object> seatData = seatDoc.getData();
+                                            if (seatData != null) {
+                                                for (Map.Entry<String, Object> entry : seatData.entrySet()) {
+                                                    Map<String, Object> seatDetails = (Map<String, Object>) entry.getValue();
+                                                    String deskId = (String) seatDetails.get("deskId");
+                                                    if (deskId != null) {
+                                                        bookedSeats.put(deskId, true);
+                                                    }
+                                                }
+                                            }
+                                            Log.d("DESK_DEBUG", "Booked seats from orders: " + bookedSeats.keySet());
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("DESK_DEBUG", "Error fetching seats subcollection: " + e.getMessage(), e);
+                                    });
+                        }
+                    }
+                    return null;
+                });
+
+        // Wait for both tasks to complete before rendering
+        Tasks.whenAll(bookingsTask, ordersTask)
+                .addOnSuccessListener(aVoid -> {
                     // Tách ghế đôi và ghế thường
                     List<Desk> coupleDesks = new ArrayList<>();
                     List<Desk> regularDesks = new ArrayList<>();
@@ -306,7 +349,7 @@ public class DeskActivity extends AppCompatActivity {
                     Log.d("DESK_DEBUG", "Rendered couple grid with " + coupleDesks.size() + " desks and regular grid with " + regularDesks.size() + " desks");
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("DESK_DEBUG", "Error fetching bookings: " + e.getMessage(), e);
+                    Log.e("DESK_DEBUG", "Error fetching bookings or orders: " + e.getMessage(), e);
                     Toast.makeText(this, "Lỗi khi kiểm tra ghế đã đặt", Toast.LENGTH_SHORT).show();
                 });
     }
@@ -339,7 +382,7 @@ public class DeskActivity extends AppCompatActivity {
 
         desk.setOnClickListener(v -> {
             Desk deskData = deskList.stream().filter(d -> d.getIdDesk().equals(deskId)).findFirst().orElse(null);
-            if (deskData != null && deskData.isAvailable()) {
+            if (deskData != null && deskData.isAvailable() && isAvailable) {
                 if (selectedDesks.containsKey(deskId)) {
                     selectedDesks.remove(deskId);
                     desk.setBackgroundColor((Integer) desk.getTag());
@@ -348,6 +391,8 @@ public class DeskActivity extends AppCompatActivity {
                     desk.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"));
                 }
                 updateInfoText();
+            } else {
+                Toast.makeText(this, "Ghế " + displayText + " đã được chọn", Toast.LENGTH_SHORT).show();
             }
         });
 
