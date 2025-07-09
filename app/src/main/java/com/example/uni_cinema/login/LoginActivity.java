@@ -1,7 +1,7 @@
 package com.example.uni_cinema.login;
 
 import android.content.Intent;
-import android.content.SharedPreferences; // Import SharedPreferences
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -16,6 +16,14 @@ import com.example.uni_cinema.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class LoginActivity extends AppCompatActivity {
 
     EditText emailEditText, passwordEditText;
@@ -23,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView goToRegisterText;
     TextView forgotPasswordTextView;
     FirebaseAuth mAuth;
+    private static final String BASE_URL = "http://10.0.2.2:5000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +41,9 @@ public class LoginActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
-        loginButton = findViewById(R.id.loginButton);
+
+
+        System: loginButton = findViewById(R.id.loginButton);
         goToRegisterText = findViewById(R.id.goToRegisterText);
         forgotPasswordTextView = findViewById(R.id.forgotPasswordText);
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -53,11 +64,54 @@ public class LoginActivity extends AppCompatActivity {
                         // Lấy UID của người dùng hiện tại
                         String uid = mAuth.getCurrentUser().getUid();
 
-                        // Store UID in SharedPreferences
+                        // Store UID and fetch JWT token
                         SharedPreferences sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPref.edit();
                         editor.putString("user_uid", uid);
-                        editor.apply(); // Use apply() for asynchronous saving
+                        editor.apply();
+
+                        // Fetch JWT token from server
+                        new Thread(() -> {
+                            try {
+                                URL url = new URL(BASE_URL + "/login");
+                                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                                conn.setRequestMethod("POST");
+                                conn.setRequestProperty("Content-Type", "application/json");
+                                conn.setDoOutput(true);
+
+                                JSONObject json = new JSONObject();
+                                json.put("email", email);
+                                json.put("uid", uid);
+
+                                OutputStream os = conn.getOutputStream();
+                                os.write(json.toString().getBytes());
+                                os.flush();
+                                os.close();
+
+                                int responseCode = conn.getResponseCode();
+                                if (responseCode == HttpURLConnection.HTTP_OK) {
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                                    StringBuilder response = new StringBuilder();
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        response.append(line);
+                                    }
+                                    reader.close();
+
+                                    JSONObject responseJson = new JSONObject(response.toString());
+                                    String jwtToken = responseJson.getString("token");
+
+                                    // Store JWT token in SharedPreferences
+                                    editor.putString("jwt_token", jwtToken);
+                                    editor.apply();
+                                } else {
+                                    runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Không thể lấy JWT token", Toast.LENGTH_SHORT).show());
+                                }
+                                conn.disconnect();
+                            } catch (Exception e) {
+                                runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Lỗi khi lấy JWT token: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            }
+                        }).start();
 
                         // Lấy tài liệu của người dùng từ Firestore
                         db.collection("users").document(uid).get()
@@ -69,7 +123,6 @@ public class LoginActivity extends AppCompatActivity {
                                         String idMember = documentSnapshot.getString("idMemberShip");
                                         String birthDay = documentSnapshot.getString("birthOfDateUser");
 
-                                        // Tạo Bundle và thêm dữ liệu
                                         Bundle bundle = new Bundle();
                                         bundle.putString("firstName", firstName != null ? firstName : "");
                                         bundle.putString("lastName", lastName != null ? lastName : "");
@@ -77,23 +130,18 @@ public class LoginActivity extends AppCompatActivity {
                                         bundle.putString("idMemberShip", idMember != null ? idMember : "");
                                         bundle.putString("birthOfDateUser", birthDay != null ? birthDay : "");
 
-                                        // Tạo Intent và gắn Bundle vào
                                         Intent intent = new Intent(this, MainActivity.class);
                                         intent.putExtras(bundle);
-
-                                        // Khởi chạy Activity
                                         startActivity(intent);
                                         finish();
                                     } else {
                                         Toast.makeText(this, "Không tìm thấy dữ liệu người dùng", Toast.LENGTH_SHORT).show();
-                                        // Vẫn chuyển sang MainActivity nếu cần
                                         startActivity(new Intent(this, MainActivity.class));
                                         finish();
                                     }
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(this, "Lỗi lấy dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                    // Vẫn chuyển sang MainActivity nếu cần
                                     startActivity(new Intent(this, MainActivity.class));
                                     finish();
                                 });
@@ -104,12 +152,7 @@ public class LoginActivity extends AppCompatActivity {
                     });
         });
 
-
-        goToRegisterText.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
-        });
-        forgotPasswordTextView.setOnClickListener(v -> {
-            startActivity(new Intent(this, QuenMKActivity.class));
-        });
+        goToRegisterText.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
+        forgotPasswordTextView.setOnClickListener(v -> startActivity(new Intent(this, QuenMKActivity.class)));
     }
 }
