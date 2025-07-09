@@ -131,7 +131,7 @@
                         android:padding="8dp"
                         android:text="Thanh toán bằng momo"
                         android:drawableStart="@drawable/ic_qr_code"
-                        android:drawablePadding="12dp" />
+                        android:drawablePadding="12dp"/>
 
                     <RadioButton
                         android:id="@+id/btnThanhToanBank"
@@ -141,17 +141,7 @@
                         android:padding="8dp"
                         android:text="Thanh toán bằng vnpay"
                         android:drawableStart="@drawable/ic_bank"
-                        android:drawablePadding="12dp" />
-
-                    <RadioButton
-                        android:id="@+id/btnThanhToanWallet"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:drawableStart="@drawable/ic_wallet"
-                        android:drawablePadding="12dp"
-                        android:gravity="center_vertical"
-                        android:padding="8dp"
-                        android:text="Thanh toán bằng ví điện tử" />
+                        android:drawablePadding="12dp"/>
                 </RadioGroup>
             </LinearLayout>
         </LinearLayout>

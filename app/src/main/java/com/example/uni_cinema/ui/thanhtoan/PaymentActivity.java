@@ -18,7 +18,6 @@ import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -505,7 +504,6 @@ public class PaymentActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if ("SUCCESS".equals(status)) {
                             updatePaymentStatus("SUCCESS");
-                            updateDeskAvailability();
                             Toast.makeText(this, "Thanh toán MoMo thành công!", Toast.LENGTH_LONG).show();
                             // Có thể chuyển sang màn hình kết quả hoặc đóng activity
                             finish();
@@ -526,24 +524,6 @@ public class PaymentActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-
-    private void updateDeskAvailability() {
-        if (selectedDeskIds == null || selectedDeskIds.isEmpty() || screenRoomName == null) {
-            Log.w(TAG, "No desks or screenRoomName to update availability");
-            return;
-        }
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        for (String deskId : selectedDeskIds) {
-            db.collection("screeningRoom")
-                    .document(screenRoomName) // Use screenRoomName as screenRoomId (adjust if needed)
-                    .collection("desks")
-                    .document(deskId)
-                    .update("available", false)
-                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Desk " + deskId + " availability updated to false"))
-                    .addOnFailureListener(e -> Log.e(TAG, "Error updating desk " + deskId + " availability", e));
-        }
     }
 
     private void updatePaymentStatus(String status) {
