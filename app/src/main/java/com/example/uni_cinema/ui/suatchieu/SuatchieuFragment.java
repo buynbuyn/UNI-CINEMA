@@ -1,6 +1,7 @@
 package com.example.uni_cinema.ui.suatchieu;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -77,6 +78,34 @@ public class SuatchieuFragment extends Fragment {
             tvTheaterName.setText(args.getString("theaterName", "RẠP CHIẾU PHIM"));
             String address = args.getString("addressTheater", "Không có địa chỉ");
             tvMapAddress.setText("Vị trí rạp: " + address);
+
+            if (theaterId != null) {
+                db.collection("theaters").document(theaterId)
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                Object latObj = documentSnapshot.get("latitudeTheater");
+                                Object lonObj = documentSnapshot.get("longtitudeTheater");
+                                String latitudeTheater = (latObj instanceof Number) ? String.valueOf(((Number) latObj).doubleValue()) : String.valueOf(latObj);
+                                String longitudeTheater = (lonObj instanceof Number) ? String.valueOf(((Number) lonObj).doubleValue()) : String.valueOf(lonObj);
+                                // Add button to navigate to Google Maps
+                                tvMapAddress.setOnClickListener(v -> {
+                                    String uri = "geo:" + latitudeTheater + "," + longitudeTheater + "?q=" + latitudeTheater + "," + longitudeTheater + "(" + tvTheaterName.getText() + ")";
+                                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                                    startActivity(intent);
+                                });
+                            } else {
+                                Log.d("FIREBASE", "No such document for theaterId: " + theaterId);
+                                tvMapAddress.setText("Vị trí rạp: " + address);
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("FIREBASE", "Error getting theater data", e);
+                            tvMapAddress.setText("Vị trí rạp: " + address);
+                        });
+            } else {
+                tvMapAddress.setText("Vị trí rạp: " + address);
+            }
 
         }
 

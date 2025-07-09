@@ -16,7 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -39,7 +42,7 @@ public class PaymentActivity extends AppCompatActivity {
     private static final String PREFS_PAYMENT_DATA = "PaymentData";
     private static final long DEEP_LINK_TIMEOUT = 10 * 60 * 1000; // 10 phút
     private static final long CHECK_INTERVAL = 30 * 1000; // 30 giây
-    private static final String BASE_URL = "http://192.168.88.175:5000/payment"; // Thay bằng URL server thực tế
+    private static final String BASE_URL = "http://192.168.88.175:5000/payment/"; // Thay bằng URL server thực tế
 
     private Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private Handler checkHandler = new Handler(Looper.getMainLooper());
@@ -300,10 +303,18 @@ public class PaymentActivity extends AppCompatActivity {
 
         currentOrderReferenceId = "MOMO" + System.currentTimeMillis();
 
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        String idUser = currentUser.getUid();
+
+        if (currentUser == null) {
+            startActivity(new Intent(PaymentActivity.this, LoginActivity.class));
+        }
+
         // Gọi API server để lấy payUrl
         executorService.execute(() -> {
             try {
-                String payUrl = createPaymentRequest();
+                String payUrl = createPaymentRequest(idUser);
                 if (payUrl != null && !payUrl.isEmpty()) {
                     runOnUiThread(() -> {
                         openPaymentGateway(payUrl);
@@ -325,8 +336,15 @@ public class PaymentActivity extends AppCompatActivity {
         });
     }
 
-    private String createPaymentRequest() throws Exception {
-        URL url = new URL(BASE_URL);
+    private String createPaymentRequest(String idUser) throws Exception {
+        // Kiểm tra dữ liệu đầu vào
+        if (idUser == null || movieName == null || selectedDeskIds == null || totalAmount <= 0) {
+            Log.e(TAG, "Dữ liệu đầu vào không hợp lệ: idUser=" + idUser + ", movieName=" + movieName + ", totalAmount=" + totalAmount);
+            throw new IllegalArgumentException("Dữ liệu đầu vào không hợp lệ");
+        }
+
+        URL url = new URL(BASE_URL + idUser);
+        Log.d(TAG, "Request URL: " + url);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
@@ -335,15 +353,32 @@ public class PaymentActivity extends AppCompatActivity {
         conn.setConnectTimeout(30000); // 30 giây
         conn.setReadTimeout(30000); // 30 giây
 
+        // Tạo JSONArray cho idDesk
+        JSONArray deskIdsArray = new JSONArray();
+        for (String deskId : selectedDeskIds) {
+            if (deskId != null) {
+                deskIdsArray.put(deskId);
+            }
+        }
+
+        // Tạo JSON request
         JSONObject json = new JSONObject();
         json.put("amount", (long) totalAmount);
         json.put("orderId", currentOrderReferenceId);
-        json.put("orderInfo", "Thanh toán vé xem phim " + movieName);
+        json.put("orderInfo", "Thanh toán vé xem phim");
         json.put("redirectUrl", DEEP_LINK_URL);
-        json.put("ipnUrl", BASE_URL + "/payment/ipn");
+        json.put("ipnUrl", BASE_URL + "payment/ipn");
         json.put("requestType", "captureWallet");
-        json.put("extraData", "");
+        json.put("movie", movieName);
+        json.put("idDesk", deskIdsArray);
+        json.put("extraData", movieName);
+        json.put("screenRoom", screenRoomName);
+        json.put("dateTime", screeningDateTime);
 
+        // Log JSON để debug
+        Log.d(TAG, "Request JSON: " + json.toString());
+
+        // Gửi request
         try (OutputStream os = conn.getOutputStream()) {
             byte[] input = json.toString().getBytes(StandardCharsets.UTF_8);
             os.write(input, 0, input.length);
@@ -352,12 +387,13 @@ public class PaymentActivity extends AppCompatActivity {
         int responseCode = conn.getResponseCode();
         if (responseCode == HttpURLConnection.HTTP_OK) {
             String response = readResponse(conn);
+            Log.d(TAG, "Server response: " + response);
             JSONObject responseJson = new JSONObject(response);
             return responseJson.optString("payUrl", null);
         } else {
             String errorResponse = readErrorResponse(conn);
             Log.e(TAG, "Server error: " + responseCode + ", Response: " + errorResponse);
-            return null;
+            throw new IOException("Server error: " + responseCode + ", Response: " + errorResponse);
         }
     }
 

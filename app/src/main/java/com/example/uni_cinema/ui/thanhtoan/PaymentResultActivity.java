@@ -13,7 +13,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.MainActivity;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -22,6 +24,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
+
+// Giữ nguyên phần package và import như bạn đã viết
 
 public class PaymentResultActivity extends AppCompatActivity {
 
@@ -33,13 +37,13 @@ public class PaymentResultActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private android.widget.Button btnCompletePayment;
 
-    private ArrayList<String> selectedDeskIds;
-    private ArrayList<String> selectedDeskCategories;
-    private ArrayList<Integer> selectedDeskPrices;
+    private ArrayList<String> selectedDeskIds = new ArrayList<>();
+    private ArrayList<String> selectedDeskCategories = new ArrayList<>();
     private int totalAmount;
-    private String movieName;
-    private String screeningDateTime;
-    private String screenRoomName;
+    private String movieName = "";
+    private String screeningDateTime = "";
+    private String screenRoomName = "";
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +51,6 @@ public class PaymentResultActivity extends AppCompatActivity {
         setContentView(R.layout.activity_payment_result);
 
         initializeViews();
-        retrieveIntentData();
         handlePaymentResult();
         setupButtonListeners();
     }
@@ -66,80 +69,10 @@ public class PaymentResultActivity extends AppCompatActivity {
             tvMomoMessage = findViewById(R.id.tv_momo_message);
             btnBack = findViewById(R.id.btn_back_result);
             btnCompletePayment = findViewById(R.id.btn_complete_payment);
-
-            if (tvMovieName == null || tvDateTime == null || tvScreenRoom == null ||
-                    tvSelectedSeats == null || tvTotalAmount == null || tvPaymentStatus == null ||
-                    tvPaymentMessage == null || tvMomoTransactionId == null ||
-                    tvMomoResponseCode == null || tvMomoMessage == null ||
-                    btnBack == null || btnCompletePayment == null) {
-                throw new IllegalStateException("One or more views not found in layout");
-            }
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing views: " + e.getMessage(), e);
-            Toast.makeText(this, "Lỗi tải giao diện kết quả thanh toán. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error initializing views", e);
+            Toast.makeText(this, "Không thể khởi tạo giao diện", Toast.LENGTH_LONG).show();
             finish();
-        }
-    }
-
-    private void retrieveIntentData() {
-        try {
-            Intent intent = getIntent();
-            if (intent != null && intent.getExtras() != null) {
-                Bundle extras = intent.getExtras();
-                selectedDeskIds = extras.getStringArrayList("selectedDeskIds");
-                totalAmount = extras.getInt("totalPrice", 0);
-                movieName = extras.getString("movieName", "N/A");
-                screeningDateTime = extras.getString("screeningDateTime", "N/A");
-                screenRoomName = extras.getString("screenRoomName", "N/A");
-                selectedDeskCategories = extras.getStringArrayList("selectedDeskCategories");
-                selectedDeskPrices = extras.getIntegerArrayList("selectedDeskPrices");
-
-                if (selectedDeskIds == null) selectedDeskIds = new ArrayList<>();
-                if (selectedDeskCategories == null) selectedDeskCategories = new ArrayList<>();
-                if (selectedDeskPrices == null) selectedDeskPrices = new ArrayList<>();
-            } else {
-                Log.d(TAG, "No intent data, loading from SharedPreferences");
-                loadOrderInfoFromSharedPreferences();
-            }
-            displayOrderInfo();
-        } catch (Exception e) {
-            Log.e(TAG, "Lỗi lấy dữ liệu intent: " + e.getMessage(), e);
-            loadOrderInfoFromSharedPreferences();
-            displayOrderInfo();
-        }
-    }
-
-    private void loadOrderInfoFromSharedPreferences() {
-        SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
-        movieName = prefs.getString("movieName", "N/A");
-        screeningDateTime = prefs.getString("screeningDateTime", "N/A");
-        screenRoomName = prefs.getString("screenRoomName", "N/A");
-        totalAmount = prefs.getInt("totalAmount", 0);
-    }
-
-    private void displayOrderInfo() {
-        if (tvMovieName != null) tvMovieName.setText(movieName);
-        if (tvDateTime != null) tvDateTime.setText(screeningDateTime);
-        if (tvScreenRoom != null) tvScreenRoom.setText(screenRoomName);
-
-        if (tvSelectedSeats != null) {
-            if (selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
-                StringBuilder seatsDisplay = new StringBuilder();
-                for (int i = 0; i < selectedDeskIds.size(); i++) {
-                    if (i > 0) seatsDisplay.append(", ");
-                    seatsDisplay.append(selectedDeskIds.get(i));
-                    if (selectedDeskCategories != null && i < selectedDeskCategories.size()) {
-                        seatsDisplay.append(" (").append(selectedDeskCategories.get(i)).append(")");
-                    }
-                }
-                tvSelectedSeats.setText(seatsDisplay.toString());
-            } else {
-                tvSelectedSeats.setText("Chưa chọn ghế nào");
-            }
-        }
-
-        if (tvTotalAmount != null) {
-            tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", (double) totalAmount));
         }
     }
 
@@ -162,43 +95,33 @@ public class PaymentResultActivity extends AppCompatActivity {
                 verifyPaymentWithServer(orderId);
             }
         } else {
-            tvPaymentStatus.setText("Chưa có kết quả thanh toán");
+            tvPaymentStatus.setText("Không có dữ liệu thanh toán");
             tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.darker_gray, getTheme()));
             tvPaymentMessage.setText("Vui lòng kiểm tra lại quy trình thanh toán.");
-            tvMomoTransactionId.setText("Mã giao dịch MOMO: N/A");
-            tvMomoResponseCode.setText("Mã phản hồi MOMO: N/A");
-            tvMomoMessage.setText("Thông tin đơn hàng MOMO: N/A");
         }
     }
 
     private void displayPaymentResult(String resultCode, String orderId, String amount, String orderInfo, String transId, String message) {
         String statusMessage = "Không xác định";
-        String detailedMessage = "Vui lòng kiểm tra lại.";
+        String detailedMessage = "Không có thông tin giao dịch.";
         int statusColor = android.R.color.black;
 
-        if (resultCode != null) {
-            switch (resultCode) {
-                case "0":
-                    statusMessage = "Thanh toán thành công!";
-                    detailedMessage = "Giao dịch của bạn đã được thực hiện thành công qua MOMO.";
-                    statusColor = android.R.color.holo_green_dark;
-                    break;
-                case "1":
-                    statusMessage = "Giao dịch thất bại";
-                    detailedMessage = "Giao dịch MOMO không thành công. Vui lòng thử lại.";
-                    statusColor = android.R.color.holo_red_dark;
-                    break;
-                case "3":
-                    statusMessage = "Giao dịch bị hủy";
-                    detailedMessage = "Bạn đã hủy giao dịch MOMO.";
-                    statusColor = android.R.color.holo_orange_dark;
-                    break;
-                default:
-                    statusMessage = "Giao dịch không thành công";
-                    detailedMessage = "Có lỗi xảy ra trong quá trình thanh toán MOMO. Mã lỗi: " + resultCode;
-                    statusColor = android.R.color.holo_red_dark;
-                    break;
-            }
+        if ("0".equals(resultCode)) {
+            statusMessage = "Thanh toán thành công!";
+            detailedMessage = "Giao dịch đã hoàn tất.";
+            statusColor = android.R.color.holo_green_dark;
+        } else if ("1".equals(resultCode)) {
+            statusMessage = "Thanh toán thất bại!";
+            detailedMessage = "Vui lòng thử lại.";
+            statusColor = android.R.color.holo_red_dark;
+        } else if ("3".equals(resultCode)) {
+            statusMessage = "Giao dịch đã bị huỷ";
+            detailedMessage = "Bạn đã huỷ giao dịch.";
+            statusColor = android.R.color.holo_orange_dark;
+        } else {
+            statusMessage = "Không rõ kết quả";
+            detailedMessage = "Lỗi mã: " + resultCode;
+            statusColor = android.R.color.holo_red_dark;
         }
 
         tvPaymentStatus.setText(statusMessage);
@@ -208,13 +131,13 @@ public class PaymentResultActivity extends AppCompatActivity {
         tvMomoResponseCode.setText("Mã phản hồi MOMO: " + (resultCode != null ? resultCode : "N/A"));
         tvMomoMessage.setText("Thông tin đơn hàng MOMO: " + (orderInfo != null ? orderInfo : "N/A"));
 
-        if (amount != null && !amount.isEmpty()) {
-            try {
-                double actualAmount = Double.parseDouble(amount);
-                tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", actualAmount));
-            } catch (NumberFormatException e) {
-                tvTotalAmount.setText("Số tiền: Lỗi định dạng");
+        try {
+            if (amount != null) {
+                double amt = Double.parseDouble(amount);
+                tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", amt));
             }
+        } catch (Exception e) {
+            tvTotalAmount.setText("Số tiền: N/A");
         }
     }
 
@@ -229,40 +152,78 @@ public class PaymentResultActivity extends AppCompatActivity {
 
                 int responseCode = conn.getResponseCode();
                 if (responseCode == 200) {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     StringBuilder response = new StringBuilder();
                     String line;
-                    while ((line = in.readLine()) != null) {
-                        response.append(line);
-                    }
-                    in.close();
+                    while ((line = reader.readLine()) != null) response.append(line);
+                    reader.close();
 
                     JSONObject json = new JSONObject(response.toString());
-                    String status = json.optString("status", "UNKNOWN");
+
+                    totalAmount = json.optInt("amount", 0);
+                    movieName = json.optString("movie", "N/A");
+                    screeningDateTime = json.optString("dateTime", "N/A");
+                    screenRoomName = json.optString("screenRoom", "N/A");
+
+                    JSONArray seatArray = json.optJSONArray("desk");
+                    selectedDeskIds.clear();
+                    if (seatArray != null) {
+                        for (int i = 0; i < seatArray.length(); i++) {
+                            selectedDeskIds.add(seatArray.getString(i));
+                        }
+                    }
+
+                    String status = json.optString("status", "FAILED");
 
                     runOnUiThread(() -> {
-                        if (status.equals("SUCCESS")) {
-                            Toast.makeText(this, "Xác nhận từ server: Thanh toán thành công!", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(this, "Xác nhận từ server: Giao dịch chưa hoàn tất hoặc không tìm thấy.", Toast.LENGTH_LONG).show();
+                        if (!isFinishing()) {
+                            if ("SUCCESS".equals(status)) {
+                                tvPaymentStatus.setText("Đã xác nhận thanh toán");
+                                tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark, getTheme()));
+                            } else {
+                                tvPaymentStatus.setText("Thanh toán thất bại hoặc chưa hoàn tất");
+                                tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark, getTheme()));
+                            }
+                            displayOrderInfo();
                         }
                     });
+
                 } else {
-                    runOnUiThread(() -> Toast.makeText(this, "Lỗi khi xác minh thanh toán từ server.", Toast.LENGTH_SHORT).show());
+                    Log.e(TAG, "Server response code: " + responseCode);
                 }
+
             } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối tới server kiểm tra thanh toán.", Toast.LENGTH_SHORT).show());
+                Log.e(TAG, "verifyPaymentWithServer error: " + e.getMessage());
+                runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối máy chủ", Toast.LENGTH_SHORT).show());
             }
         }).start();
+    }
+
+    private void displayOrderInfo() {
+        tvMovieName.setText(movieName);
+        tvDateTime.setText(screeningDateTime);
+        tvScreenRoom.setText(screenRoomName);
+
+        if (selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < selectedDeskIds.size(); i++) {
+                if (i > 0) builder.append(", ");
+                builder.append(selectedDeskIds.get(i));
+            }
+            tvSelectedSeats.setText(builder.toString());
+        } else {
+            tvSelectedSeats.setText("Không có ghế nào");
+        }
+
+        tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", (double) totalAmount));
     }
 
     private void setupButtonListeners() {
         btnBack.setOnClickListener(v -> finish());
         btnCompletePayment.setOnClickListener(v -> {
-            Intent mainIntent = new Intent(PaymentResultActivity.this, MainActivity.class);
-            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(mainIntent);
+            Intent intent = new Intent(PaymentResultActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
         });
     }
