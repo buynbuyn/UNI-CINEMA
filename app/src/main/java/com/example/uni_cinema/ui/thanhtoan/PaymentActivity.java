@@ -9,6 +9,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -16,6 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONObject;
 
@@ -51,21 +57,25 @@ public class PaymentActivity extends AppCompatActivity {
     private boolean isWaitingForDeepLink = false;
     private boolean isPaymentInProgress = false;
     private String currentOrderReferenceId;
-
+    private RadioGroup radioGroupPaymentMethods;
+    private String selectedPaymentMethod = "momo"; // Giá trị mặc định
     private TextView tvMovieName, tvDateTime, tvScreenRoom, tvSelectedSeats, tvTotalAmount;
     private Button btnConfirmPayment;
     private ImageButton btnBack;
 
     private ArrayList<String> selectedDeskIds;
+
     private ArrayList<String> selectedDeskCategories;
     private ArrayList<Integer> selectedDeskPrices;
     private double totalAmount;
     private String movieName, screeningDateTime, screenRoomName;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
+
 
         // Debug thông tin intent
         debugIntentData();
@@ -79,7 +89,10 @@ public class PaymentActivity extends AppCompatActivity {
             finish();
             return;
         }
+
     }
+
+
 
     private void debugIntentData() {
         Intent intent = getIntent();
@@ -106,6 +119,7 @@ public class PaymentActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleDeepLink(intent);
+
     }
 
     @Override
@@ -128,13 +142,37 @@ public class PaymentActivity extends AppCompatActivity {
 
     private void initializeViews() {
         try {
+
             tvMovieName = findViewById(R.id.tv_movie_name);
             tvDateTime = findViewById(R.id.tv_date_time);
             tvScreenRoom = findViewById(R.id.tv_screen_room);
-            tvSelectedSeats = findViewById(R.id.tv_selected_seats);
+            tvSelectedSeats  = findViewById(R.id.tv_selected_seats);
             tvTotalAmount = findViewById(R.id.tv_total_amount);
             btnConfirmPayment = findViewById(R.id.btnThanhToan);
             btnBack = findViewById(R.id.btn_back);
+            radioGroupPaymentMethods = findViewById(R.id.radioGroupPaymentMethods);
+
+            RadioButton rbDefault = findViewById(R.id.btnThanhToanQR);
+            if (rbDefault != null) {
+                rbDefault.setChecked(true);
+            } else {
+                Log.w(TAG, "Default RadioButton (btnThanhToanQR) not found");
+            }
+
+            radioGroupPaymentMethods.setOnCheckedChangeListener((group, checkedId) -> {
+                try {
+                    RadioButton checkedRadioButton = findViewById(checkedId);
+                    if (checkedRadioButton != null) {
+                        selectedPaymentMethod = checkedRadioButton.getText().toString().replace("Thanh toán bằng ", "");
+                        Log.d(TAG, "Selected payment method: " + selectedPaymentMethod);
+                    } else {
+                        throw new IllegalStateException("Checked RadioButton is null");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error handling payment method selection: " + e.getMessage(), e);
+                    Toast.makeText(this, "Lỗi chọn phương thức thanh toán.", Toast.LENGTH_SHORT).show();
+                }
+            });
         } catch (Exception e) {
             Log.e(TAG, "Lỗi khởi tạo giao diện: " + e.getMessage(), e);
             Toast.makeText(this, "Lỗi tải giao diện. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
@@ -259,10 +297,20 @@ public class PaymentActivity extends AppCompatActivity {
             if (selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
                 for (int i = 0; i < selectedDeskIds.size(); i++) {
                     String seatId = selectedDeskIds.get(i);
+                    if (seatId != null && seatId.startsWith("idDesk")) {
+                        seatId = seatId.replace("idDesk", "");
+                    }
+
                     String category = i < selectedDeskCategories.size() ? selectedDeskCategories.get(i) : "N/A";
                     int price = i < selectedDeskPrices.size() ? selectedDeskPrices.get(i) : 0;
-                    seatsInfo.append(seatId).append(" (").append(category).append(", ")
-                            .append(String.format(Locale.getDefault(), "%,d VND", price)).append(")");
+
+                    seatsInfo.append(seatId)
+                            .append(" (")
+                            .append(category)
+                            .append(", ")
+                            .append(String.format(Locale.getDefault(), "%,d VND", price))
+                            .append(")");
+
                     if (i < selectedDeskIds.size() - 1) {
                         seatsInfo.append("\n");
                     }
@@ -271,6 +319,7 @@ public class PaymentActivity extends AppCompatActivity {
                 seatsInfo.append("Chưa chọn ghế nào");
             }
             tvSelectedSeats.setText(seatsInfo.toString());
+
             tvTotalAmount.setText(String.format(Locale.getDefault(), "%,d VND", (int) totalAmount));
         } catch (Exception e) {
             Log.e(TAG, "Lỗi cập nhật giao diện: " + e.getMessage(), e);
@@ -279,9 +328,26 @@ public class PaymentActivity extends AppCompatActivity {
     }
 
     private void setupButtonListeners() {
-        btnConfirmPayment.setOnClickListener(v -> initiateMoMoPayment());
+        btnConfirmPayment.setOnClickListener(v -> {
+            SharedPreferences sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            String uid = sharedPref.getString("user_uid", null);
+
+            if (uid == null || uid.isEmpty()) {
+                Toast.makeText(this, "Bạn cần đăng nhập để thanh toán.", Toast.LENGTH_SHORT).show();
+                // Điều hướng về LoginActivity
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Xóa ngăn xếp để tránh quay lại
+                startActivity(intent);
+                return;
+            }
+
+            // Nếu đã đăng nhập (có UID), tiếp tục thanh toán
+            initiateMoMoPayment();
+        });
+
         btnBack.setOnClickListener(v -> onBackPressed());
     }
+
 
     private void initiateMoMoPayment() {
         if (isPaymentInProgress) {
@@ -498,12 +564,35 @@ public class PaymentActivity extends AppCompatActivity {
         editor.putLong("paymentEndTime", System.currentTimeMillis());
         editor.apply();
     }
-
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    CollectionReference ordersRef = db.collection("orders");
     private void navigateToPaymentStatusCheck() {
-        Intent intent = new Intent(this, PaymentResultActivity.class);
-        intent.putExtra("orderId", currentOrderReferenceId);
+        Task<QuerySnapshot> querySnapshotTask = ordersRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                long count = task.getResult().size(); // Get the number of documents
+                String Order = "idOrder" + String.format("%027d", count + 1); // Generate lastOrderId
+        SharedPreferences sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String uid = sharedPref.getString("user_uid", "");
+                ArrayList<String> filteredDeskIds = new ArrayList<>();
+                for (String id : selectedDeskIds) {
+                    if (!"idDeskA03".equals(id)) {
+                        filteredDeskIds.add(id);
+                    }
+                }
+
+                Intent intent = new Intent(this, PaymentResultActivity.class);
+        intent.putExtra("orderId", Order);
         intent.putExtra("isTimeout", true);
+        intent.putExtra("idUser", uid);
+        intent.putExtra("totalPrice", totalAmount);
+        intent.putExtra("screeningDateTime", screeningDateTime);
+        intent.putExtra("screenRoomName", screenRoomName);
+        intent.putExtra("payment_success", true);
+        intent.putStringArrayListExtra("selectedDeskIds", filteredDeskIds);
+        intent.putExtra("idMethodPayment", selectedPaymentMethod);
         startActivity(intent);
+            }
+    });
     }
 
     private void checkPaymentStatusFromPrefs() {
