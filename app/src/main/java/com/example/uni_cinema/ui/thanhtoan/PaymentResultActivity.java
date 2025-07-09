@@ -64,13 +64,14 @@ public class PaymentResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_result);
 
+        initializeViews();
         retrieveIntentData();
+        displayOrderInfo();
         handlePaymentResult();
         saveSeatsToSubcollection();
-        sendPaymentDetailsToServer(); // Gửi dữ liệu lên server
         setupButtonListeners();
-        initializeViews();
     }
+
 
     private void initializeViews() {
         try {
@@ -426,14 +427,12 @@ public class PaymentResultActivity extends AppCompatActivity {
             if (orderId != null && !orderId.isEmpty()) {
                 DocumentReference orderDocRef = ordersRef.document(orderId);
                 Map<String, Object> orderData = new HashMap<>();
-                orderData.put("movieName", movieName);
-                orderData.put("screeningDateTime", screeningDateTime);
                 orderData.put("screenRoomName", screenRoomName);
-                orderData.put("totalAmount", totalAmount);
-                orderData.put("uid", uid); // Thay idUser bằng uid
-                orderData.put("paymentSuccess", paymentSuccess);
+                orderData.put("totalPrice", totalAmount);
+                orderData.put("idUser", uid); // Thay idUser bằng uid
+                orderData.put("stateOrder", paymentSuccess);
                 orderData.put("idMethodPayment", idMethodPayment);
-                orderData.put("discount", discount); // Thêm discount vào orderData
+                orderData.put("idDiscount", discount); // Thêm discount vào orderData
                 orderData.put("timestamp", System.currentTimeMillis()); // Thêm thời gian tạo hóa đơn
 
                 orderDocRef.set(orderData)
