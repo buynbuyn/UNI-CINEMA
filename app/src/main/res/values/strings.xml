@@ -26,21 +26,44 @@
         <item>Quận 3</item>
         <item>Khác</item>
     </string-array>
+    <string name="back_button_description">Back to previous screen</string>
+    <string name="payment_result_title">Kết quả thanh toán</string>
+    <string name="payment_status_checking">Đang kiểm tra trạng thái...</string>
+    <string name="payment_message_default">Vui lòng đợi trong giây lát hoặc liên hệ hỗ trợ nếu có lỗi.</string>
+    <string name="payment_method_icon_description">Payment method logo</string>
+    <string name="order_info_title">Thông tin đơn hàng</string>
+    <string name="placeholder_movie_name">TÊN PHIM SẼ ĐƯỢC HIỂN THỊ Ở ĐÂY</string>
+    <string name="placeholder_date_time">xx/xx/xxxx ( thứ xx ) 00:00 ~ 00:00</string>
+    <string name="placeholder_screen_room">Phòng Chiếu: ...</string>
+    <string name="placeholder_selected_seats">Ghế: ...</string>
+    <string name="vnpay_details_title">Chi tiết giao dịch VNPAY</string>
+    <string name="vnpay_transaction_id">Mã giao dịch: N/A</string>
+    <string name="vnpay_response_code">Mã phản hồi VNPAY: N/A</string>
+    <string name="vnpay_message">Thông báo VNPAY: N/A</string>
+    <string name="momo_details_title">Chi tiết giao dịch MoMo</string>
+    <string name="momo_transaction_id">Mã giao dịch: N/A</string>
+    <string name="momo_response_code">Mã phản hồi MoMo: N/A</string>
+    <string name="momo_message">Thông báo MoMo: N/A</string>
+    <string name="total_amount_label">Tổng tiền</string>
+    <string name="placeholder_total_amount">X00.000 VNĐ</string>
+    <string name="complete_payment_button">Hoàn tất</string>
+    <string name="complete_payment_description">Complete payment process</string>
+    <string name="movie_poster_description">Movie poster image</string>
 
-        <string name="error_loading_ui">Lỗi tải giao diện. Vui lòng thử lại.</string>
-        <string name="error_loading_order">Không nhận được thông tin đơn hàng. Vui lòng thử lại.</string>
-        <string name="error_updating_ui">Lỗi cập nhật thông tin đơn hàng.</string>
-        <string name="invalid_order_info">Thông tin đơn hàng không hợp lệ.</string>
-        <string name="login_required">Bạn cần đăng nhập để thanh toán.</string>
-        <string name="preparing_payment">Đang chuẩn bị thanh toán qua %s...</string>
-        <string name="payment_error">Lỗi trong quá trình thanh toán. Vui lòng thử lại.</string>
-        <string name="error_generating_url">Không thể tạo URL thanh toán.</string>
-        <string name="error_opening_gateway">Không thể mở cổng thanh toán. Vui lòng kiểm tra trình duyệt.</string>
-        <string name="empty_payment_url">URL thanh toán trống.</string>
-        <string name="no_seats_selected">Chưa chọn ghế nào</string>
-        <string name="payment_success">Thanh toán thành công!</string>
-        <string name="payment_failed">Thanh toán thất bại. Vui lòng thử lại.</string>
-        <string name="payment_canceled">Thanh toán bị hủy.</string>
-        <string name="payment_verifying">Đang kiểm tra trạng thái thanh toán...</string>
-        <string name="no_browser_found">Không tìm thấy trình duyệt để thực hiện thanh toán.</string>
+<!--        <string name="error_loading_ui">Lỗi tải giao diện. Vui lòng thử lại.</string>-->
+<!--        <string name="error_loading_order">Không nhận được thông tin đơn hàng. Vui lòng thử lại.</string>-->
+<!--        <string name="error_updating_ui">Lỗi cập nhật thông tin đơn hàng.</string>-->
+<!--        <string name="invalid_order_info">Thông tin đơn hàng không hợp lệ.</string>-->
+<!--        <string name="login_required">Bạn cần đăng nhập để thanh toán.</string>-->
+<!--        <string name="preparing_payment">Đang chuẩn bị thanh toán qua %s...</string>-->
+<!--        <string name="payment_error">Lỗi trong quá trình thanh toán. Vui lòng thử lại.</string>-->
+<!--        <string name="error_generating_url">Không thể tạo URL thanh toán.</string>-->
+<!--        <string name="error_opening_gateway">Không thể mở cổng thanh toán. Vui lòng kiểm tra trình duyệt.</string>-->
+<!--        <string name="empty_payment_url">URL thanh toán trống.</string>-->
+<!--        <string name="no_seats_selected">Chưa chọn ghế nào</string>-->
+<!--        <string name="payment_success">Thanh toán thành công!</string>-->
+<!--        <string name="payment_failed">Thanh toán thất bại. Vui lòng thử lại.</string>-->
+<!--        <string name="payment_canceled">Thanh toán bị hủy.</string>-->
+<!--        <string name="payment_verifying">Đang kiểm tra trạng thái thanh toán...</string>-->
+<!--        <string name="no_browser_found">Không tìm thấy trình duyệt để thực hiện thanh toán.</string>-->
 </resources>

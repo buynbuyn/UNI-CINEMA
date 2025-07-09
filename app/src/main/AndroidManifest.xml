@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -13,7 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.UNI_CINEMA"
-        tools:targetApi="31">
+        tools:targetApi="31"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".ui.thanhtoan.PaymentActivity"
             android:exported="true"
@@ -26,7 +28,8 @@
             android:name=".ui.thanhtoan.PaymentResultActivity"
             android:autoVerify="true"
             android:exported="true"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.UNI_CINEMA.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -35,7 +38,16 @@
 
                 <data
                     android:host="payment-result"
-                    android:scheme="uni_cinema" />
+                    android:scheme="unicinema" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- HTTP scheme cho deep link -->
+                <data android:scheme="https"
+                    android:host="yourdomain.com"
+                    android:pathPrefix="/payment-result" />
             </intent-filter>
         </activity>
         <activity

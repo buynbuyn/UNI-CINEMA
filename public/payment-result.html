@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Result</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Kết quả thanh toán</h1>
+    <p id="resultMessage">Đang xử lý...</p>
+
+    <script>
+        // Kiểm tra để tránh vòng lặp
+        if (!sessionStorage.getItem('processed')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const responseCode = urlParams.get('vnp_ResponseCode');
+            const transactionRef = urlParams.get('vnp_TxnRef');
+
+            const resultMessage = document.getElementById('resultMessage');
+            if (responseCode === '00') {
+                resultMessage.innerText = `Thanh toán thành công! Mã giao dịch: ${transactionRef}`;
+            } else {
+                resultMessage.innerText = `Thanh toán thất bại. Mã lỗi: ${responseCode || 'Không xác định'}`;
+            }
+
+            // Chuyển hướng với tham số cơ bản
+            if (responseCode && transactionRef) {
+                setTimeout(() => {
+                    const redirectUrl = `unicinema://payment-result?code=${encodeURIComponent(responseCode)}&ref=${encodeURIComponent(transactionRef)}`;
+                    window.location.href = redirectUrl;
+                    sessionStorage.setItem('processed', 'true'); // Đánh dấu đã xử lý
+                }, 3000);
+            } else {
+                resultMessage.innerText = 'Dữ liệu không đầy đủ, vui lòng thử lại.';
+            }
+        } else {
+            document.getElementById('resultMessage').innerText = 'Đã xử lý, vui lòng kiểm tra ứng dụng.';
+        }
+    </script>
+</body>
+</html>

@@ -139,7 +139,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chi tiết giao dịch VNPAY"
+                android:text="Chi tiết giao dịch MOMO"
                 android:textColor="@color/black"
                 android:textStyle="bold"
                 android:textSize="20sp"
@@ -147,30 +147,28 @@
                 android:layout_marginBottom="8dp" />
 
             <TextView
-                android:id="@+id/tv_vnpay_transaction_id"
+                android:id="@+id/tv_momo_transaction_id"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mã giao dịch: N/A"
+                android:text="Mã giao dịch MOMO: N/A"
                 android:textColor="#333333"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/tv_vnpay_response_code"
+                android:id="@+id/tv_momo_response_code"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mã phản hồi VNPAY: N/A"
+                android:text="Mã phản hồi MOMO: N/A"
                 android:textColor="#333333"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/tv_vnpay_message"
+                android:id="@+id/tv_momo_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Thông báo VNPAY: N/A"
+                android:text="Thông tin đơn hàng MOMO: N/A"
                 android:textColor="#333333"
                 android:textSize="16sp" />
-
-
         </LinearLayout>
     </ScrollView>
 
@@ -222,4 +220,5 @@
             android:textColor="#FFFFFF"
             android:textStyle="bold" />
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

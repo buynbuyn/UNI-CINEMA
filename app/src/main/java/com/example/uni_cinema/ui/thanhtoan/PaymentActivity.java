@@ -1,62 +1,58 @@
 package com.example.uni_cinema.ui.thanhtoan;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Toast;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uni_cinema.R;
-import com.example.uni_cinema.login.LoginActivity; // Import LoginActivity
+import com.example.uni_cinema.login.LoginActivity;
 
-import java.net.URLEncoder;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PaymentActivity extends AppCompatActivity {
     private static final String TAG = "PaymentActivity";
+    private static final String DEEP_LINK_SCHEME = "unicinema";
+    private static final String DEEP_LINK_HOST = "payment-result";
+    private static final String DEEP_LINK_URL = DEEP_LINK_SCHEME + "://" + DEEP_LINK_HOST;
+    private static final String PREFS_PAYMENT_DATA = "PaymentData";
+    private static final long DEEP_LINK_TIMEOUT = 10 * 60 * 1000; // 10 phút
+    private static final long CHECK_INTERVAL = 30 * 1000; // 30 giây
+    private static final String BASE_URL = "http://192.168.88.175:5000/payment"; // Thay bằng URL server thực tế
 
-    public static String hmacSHA512(final String key, final String data) {
-        try {
-            if (key == null || data == null) {
-                throw new NullPointerException("Key or data is null");
-            }
-            final Mac hmac512 = Mac.getInstance("HmacSHA512");
-            byte[] hmacKeyBytes = key.getBytes();
-            final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
-            hmac512.init(secretKey);
-            byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            byte[] result = hmac512.doFinal(dataBytes);
-            StringBuilder sb = new StringBuilder(2 * result.length);
-            for (byte b : result) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (Exception ex) {
-            Log.e(TAG, "Error in hmacSHA512: " + ex.getMessage(), ex);
-            return "";
-        }
-    }
+    private Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private Handler checkHandler = new Handler(Looper.getMainLooper());
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private Runnable timeoutRunnable;
+    private Runnable checkRunnable;
+
+    private boolean isWaitingForDeepLink = false;
+    private boolean isPaymentInProgress = false;
+    private String currentOrderReferenceId;
 
     private TextView tvMovieName, tvDateTime, tvScreenRoom, tvSelectedSeats, tvTotalAmount;
-    private RadioGroup radioGroupPaymentMethods;
     private Button btnConfirmPayment;
     private ImageButton btnBack;
 
@@ -64,117 +60,193 @@ public class PaymentActivity extends AppCompatActivity {
     private ArrayList<String> selectedDeskCategories;
     private ArrayList<Integer> selectedDeskPrices;
     private double totalAmount;
-
-    private String movieName;
-    private String screeningDateTime;
-    private String screenRoomName;
-
-    private String selectedPaymentMethod = "mã QR";
-    private String currentOrderReferenceId;
+    private String movieName, screeningDateTime, screenRoomName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
+        // Debug thông tin intent
+        debugIntentData();
+
+        initializeViews();
+        if (retrieveIntentData()) {
+            updateOrderSummaryUI();
+            setupButtonListeners();
+        } else {
+            // Dữ liệu không hợp lệ, đóng activity
+            finish();
+            return;
+        }
+    }
+
+    private void debugIntentData() {
+        Intent intent = getIntent();
+        Log.d(TAG, "=== DEBUG INTENT DATA ===");
+        Log.d(TAG, "Intent: " + (intent != null ? "Not null" : "NULL"));
+
+        if (intent != null) {
+            Bundle extras = intent.getExtras();
+            Log.d(TAG, "Extras: " + (extras != null ? "Not null" : "NULL"));
+
+            if (extras != null) {
+                Log.d(TAG, "All extras keys: " + extras.keySet().toString());
+                for (String key : extras.keySet()) {
+                    Object value = extras.get(key);
+                    Log.d(TAG, "Key: " + key + ", Value: " + value + ", Type: " + (value != null ? value.getClass().getSimpleName() : "null"));
+                }
+            }
+        }
+        Log.d(TAG, "=== END DEBUG ===");
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isPaymentInProgress) {
+            showPaymentInProgressDialog();
+        }
+        checkPaymentStatusFromPrefs();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cleanupHandlers();
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+    }
+
+    private void initializeViews() {
         try {
             tvMovieName = findViewById(R.id.tv_movie_name);
             tvDateTime = findViewById(R.id.tv_date_time);
             tvScreenRoom = findViewById(R.id.tv_screen_room);
             tvSelectedSeats = findViewById(R.id.tv_selected_seats);
             tvTotalAmount = findViewById(R.id.tv_total_amount);
-            radioGroupPaymentMethods = findViewById(R.id.radioGroupPaymentMethods);
             btnConfirmPayment = findViewById(R.id.btnThanhToan);
             btnBack = findViewById(R.id.btn_back);
-
-            if (tvMovieName == null || tvDateTime == null || tvScreenRoom == null ||
-                    tvSelectedSeats == null || tvTotalAmount == null || radioGroupPaymentMethods == null ||
-                    btnConfirmPayment == null || btnBack == null) {
-                throw new IllegalStateException("One or more views not found in layout");
-            }
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing views: " + e.getMessage(), e);
+            Log.e(TAG, "Lỗi khởi tạo giao diện: " + e.getMessage(), e);
             Toast.makeText(this, "Lỗi tải giao diện. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
             finish();
-            return;
         }
+    }
 
+    private boolean retrieveIntentData() {
         try {
             Intent intent = getIntent();
-            if (intent != null && intent.getExtras() != null) {
-                Bundle extras = intent.getExtras();
-                selectedDeskIds = extras.getStringArrayList("selectedDeskIds");
+            if (intent == null) {
+                Log.e(TAG, "Intent is null");
+                Toast.makeText(this, "Không nhận được thông tin đơn hàng. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            Bundle extras = intent.getExtras();
+            if (extras == null) {
+                Log.e(TAG, "Bundle extras is null");
+                Toast.makeText(this, "Không có dữ liệu đơn hàng. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            // Log all available keys for debugging
+            Log.d(TAG, "Available keys in bundle: " + extras.keySet().toString());
+
+            // Lấy dữ liệu với xử lý lỗi từng trường
+            selectedDeskIds = extras.getStringArrayList("selectedDeskIds");
+            if (selectedDeskIds == null) {
+                selectedDeskIds = new ArrayList<>();
+                Log.w(TAG, "selectedDeskIds is null, using empty list");
+            }
+
+            // Thử với cả int và double cho totalPrice
+            try {
                 totalAmount = extras.getInt("totalPrice", 0);
-                movieName = extras.getString("movieName", "N/A");
-                screeningDateTime = extras.getString("screeningDateTime", "N/A");
-                screenRoomName = extras.getString("screenRoomName", "N/A");
-                selectedDeskCategories = extras.getStringArrayList("selectedDeskCategories");
-                selectedDeskPrices = extras.getIntegerArrayList("selectedDeskPrices");
-                if (selectedDeskCategories == null) selectedDeskCategories = new ArrayList<>();
-                if (selectedDeskPrices == null) selectedDeskPrices = new ArrayList<>();
-            } else {
-                throw new IllegalStateException("No intent or extras found");
+            } catch (Exception e) {
+                try {
+                    totalAmount = extras.getInt("totalPrice", 0);
+                } catch (Exception e2) {
+                    Log.w(TAG, "Cannot get totalPrice as double or int, using 0.0");
+                    totalAmount = 0.0;
+                }
             }
+
+            movieName = extras.getString("movieName");
+            if (movieName == null) {
+                movieName = "N/A";
+                Log.w(TAG, "movieName is null, using 'N/A'");
+            }
+
+            screeningDateTime = extras.getString("screeningDateTime");
+            if (screeningDateTime == null) {
+                screeningDateTime = "N/A";
+                Log.w(TAG, "screeningDateTime is null, using 'N/A'");
+            }
+
+            screenRoomName = extras.getString("screenRoomName");
+            if (screenRoomName == null) {
+                screenRoomName = "N/A";
+                Log.w(TAG, "screenRoomName is null, using 'N/A'");
+            }
+
+            selectedDeskCategories = extras.getStringArrayList("selectedDeskCategories");
+            if (selectedDeskCategories == null) {
+                selectedDeskCategories = new ArrayList<>();
+                Log.w(TAG, "selectedDeskCategories is null, using empty list");
+            }
+
+            selectedDeskPrices = extras.getIntegerArrayList("selectedDeskPrices");
+            if (selectedDeskPrices == null) {
+                selectedDeskPrices = new ArrayList<>();
+                Log.w(TAG, "selectedDeskPrices is null, using empty list");
+            }
+
+            // Log dữ liệu đã nhận
+            Log.d(TAG, "Retrieved data:");
+            Log.d(TAG, "selectedDeskIds size: " + selectedDeskIds.size());
+            Log.d(TAG, "totalAmount: " + totalAmount);
+            Log.d(TAG, "movieName: " + movieName);
+            Log.d(TAG, "screeningDateTime: " + screeningDateTime);
+            Log.d(TAG, "screenRoomName: " + screenRoomName);
+            Log.d(TAG, "selectedDeskCategories size: " + selectedDeskCategories.size());
+            Log.d(TAG, "selectedDeskPrices size: " + selectedDeskPrices.size());
+
+            // Kiểm tra dữ liệu cơ bản
+            if (selectedDeskIds.isEmpty()) {
+                Log.e(TAG, "No selected seats");
+                Toast.makeText(this, "Không có ghế được chọn. Vui lòng chọn ghế trước khi thanh toán.", Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            if (totalAmount <= 0) {
+                Log.e(TAG, "Invalid total amount: " + totalAmount);
+                Toast.makeText(this, "Tổng tiền không hợp lệ. Vui lòng kiểm tra lại.", Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            // Đảm bảo số lượng các mảng khớp với số ghế đã chọn
+            while (selectedDeskCategories.size() < selectedDeskIds.size()) {
+                selectedDeskCategories.add("Standard");
+            }
+            while (selectedDeskPrices.size() < selectedDeskIds.size()) {
+                selectedDeskPrices.add(0);
+            }
+
+            return true;
         } catch (Exception e) {
-            Log.e(TAG, "Error retrieving intent data: " + e.getMessage(), e);
-            Toast.makeText(this, "Không nhận được thông tin đơn hàng. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
-            finish();
-            return;
+            Log.e(TAG, "Lỗi lấy dữ liệu intent: " + e.getMessage(), e);
+            Toast.makeText(this, "Lỗi xử lý dữ liệu đơn hàng. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+            return false;
         }
-
-        updateOrderSummaryUI();
-
-        RadioButton rbDefault = findViewById(R.id.btnThanhToanQR);
-        if (rbDefault != null) {
-            rbDefault.setChecked(true);
-        } else {
-            Log.w(TAG, "Default RadioButton (btnThanhToanQR) not found");
-        }
-
-        radioGroupPaymentMethods.setOnCheckedChangeListener((group, checkedId) -> {
-            try {
-                RadioButton checkedRadioButton = findViewById(checkedId);
-                if (checkedRadioButton != null) {
-                    selectedPaymentMethod = checkedRadioButton.getText().toString().replace("Thanh toán bằng ", "");
-                    Log.d(TAG, "Selected payment method: " + selectedPaymentMethod);
-                } else {
-                    throw new IllegalStateException("Checked RadioButton is null");
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error handling payment method selection: " + e.getMessage(), e);
-                Toast.makeText(this, "Lỗi chọn phương thức thanh toán.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnConfirmPayment.setOnClickListener(v -> {
-            try {
-                if (totalAmount <= 0 || selectedDeskIds == null || selectedDeskIds.isEmpty()) {
-                    Toast.makeText(this, "Thông tin đơn hàng không hợp lệ.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Retrieve UID from SharedPreferences
-                SharedPreferences sharedPref = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                String userUid = sharedPref.getString("user_uid", null); // Default to null if not found
-
-                if (userUid == null || userUid.isEmpty()) {
-                    // UID is empty or not found, redirect to LoginActivity
-                    Toast.makeText(this, "Bạn cần đăng nhập để thanh toán.", Toast.LENGTH_SHORT).show();
-                    Intent loginIntent = new Intent(this, LoginActivity.class);
-                    startActivity(loginIntent);
-                    // Optionally, you might want to finish PaymentActivity here if login is mandatory
-                    // finish();
-                } else {
-                    // UID exists, proceed with payment
-                    initiatePayment();
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error initiating payment: " + e.getMessage(), e);
-                Toast.makeText(this, "Lỗi bắt đầu thanh toán. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnBack.setOnClickListener(v -> finish());
     }
 
     private void updateOrderSummaryUI() {
@@ -185,13 +257,15 @@ public class PaymentActivity extends AppCompatActivity {
 
             StringBuilder seatsInfo = new StringBuilder();
             if (selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
-                int size = selectedDeskIds.size();
-                for (int i = 0; i < size; i++) {
+                for (int i = 0; i < selectedDeskIds.size(); i++) {
                     String seatId = selectedDeskIds.get(i);
-                    String category = (selectedDeskCategories != null && i < selectedDeskCategories.size()) ? selectedDeskCategories.get(i) : "N/A";
-                    int price = (selectedDeskPrices != null && i < selectedDeskPrices.size()) ? selectedDeskPrices.get(i) : 0;
+                    String category = i < selectedDeskCategories.size() ? selectedDeskCategories.get(i) : "N/A";
+                    int price = i < selectedDeskPrices.size() ? selectedDeskPrices.get(i) : 0;
                     seatsInfo.append(seatId).append(" (").append(category).append(", ")
-                            .append(String.format(Locale.getDefault(), "%,d VND", price)).append(")\n");
+                            .append(String.format(Locale.getDefault(), "%,d VND", price)).append(")");
+                    if (i < selectedDeskIds.size() - 1) {
+                        seatsInfo.append("\n");
+                    }
                 }
             } else {
                 seatsInfo.append("Chưa chọn ghế nào");
@@ -199,124 +273,318 @@ public class PaymentActivity extends AppCompatActivity {
             tvSelectedSeats.setText(seatsInfo.toString());
             tvTotalAmount.setText(String.format(Locale.getDefault(), "%,d VND", (int) totalAmount));
         } catch (Exception e) {
-            Log.e(TAG, "Error updating UI: " + e.getMessage(), e);
+            Log.e(TAG, "Lỗi cập nhật giao diện: " + e.getMessage(), e);
             Toast.makeText(this, "Lỗi cập nhật thông tin đơn hàng.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void initiatePayment() {
-        try {
-            Log.d(TAG, "Initiating payment with totalAmount: " + totalAmount + ", selectedDeskIds: " + (selectedDeskIds != null ? selectedDeskIds.toString() : "null"));
-            Toast.makeText(this, "Đang chuẩn bị thanh toán qua " + selectedPaymentMethod + "...", Toast.LENGTH_LONG).show();
-
-            SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.apply();
-
-            String orderIdForVNPay = System.currentTimeMillis() + "_" + (selectedDeskIds != null && !selectedDeskIds.isEmpty() ? selectedDeskIds.get(0) : "BOOKING");
-            currentOrderReferenceId = orderIdForVNPay;
-            String dummyVNPAYUrl = generateDummyVNPAYUrl(totalAmount, orderIdForVNPay);
-
-            if (dummyVNPAYUrl == null || dummyVNPAYUrl.isEmpty()) {
-                throw new IllegalStateException("Generated VNPAY URL is invalid");
-            }
-
-            openPaymentGateway(dummyVNPAYUrl);
-        } catch (Exception e) {
-            Log.e(TAG, "Error initiating payment process: " + e.getMessage(), e);
-            Toast.makeText(this, "Lỗi trong quá trình thanh toán. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
-        }
+    private void setupButtonListeners() {
+        btnConfirmPayment.setOnClickListener(v -> initiateMoMoPayment());
+        btnBack.setOnClickListener(v -> onBackPressed());
     }
 
-    private String generateDummyVNPAYUrl(double amount, String orderId) {
-        try {
-            String vnp_Version = "2.1.0";
-            String vnp_Command = "pay";
-            String vnp_TmnCode = "YYEMP9YC";
-            String vnp_Amount = String.valueOf((long) (amount * 100));
-            String vnp_CurrCode = "VND";
-            String vnp_TxnRef = orderId;
-            String vnp_OrderInfo = "ThanhToanVePhim_" + vnp_TxnRef;
-            String vnp_OrderType = "billpayment";
-            String vnp_Locale = "vn";
-            String vnp_ReturnUrl = "uni_cinema://payment-result";
-            String vnp_IpAddr = "127.0.0.1";
+    private void initiateMoMoPayment() {
+        if (isPaymentInProgress) {
+            Toast.makeText(this, "Đang xử lý thanh toán. Vui lòng chờ.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
-            String vnp_CreateDate = formatter.format(new java.util.Date());
+        if (selectedDeskIds == null || selectedDeskIds.isEmpty() || totalAmount <= 0) {
+            Toast.makeText(this, "Dữ liệu đơn hàng không hợp lệ.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            Map<String, String> vnp_Params = new HashMap<>();
-            vnp_Params.put("vnp_Version", vnp_Version);
-            vnp_Params.put("vnp_Command", vnp_Command);
-            vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-            vnp_Params.put("vnp_Amount", vnp_Amount);
-            vnp_Params.put("vnp_CurrCode", vnp_CurrCode);
-            vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-            vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
-            vnp_Params.put("vnp_OrderType", vnp_OrderType);
-            vnp_Params.put("vnp_Locale", vnp_Locale);
-            vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
-            vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-            vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        isPaymentInProgress = true;
+        btnConfirmPayment.setEnabled(false);
+        btnConfirmPayment.setText("Đang xử lý...");
 
-            List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
-            Collections.sort(fieldNames);
-            StringBuilder hashData = new StringBuilder();
-            StringBuilder query = new StringBuilder();
-            Iterator<String> itr = fieldNames.iterator();
-            while (itr.hasNext()) {
-                String fieldName = itr.next();
-                String fieldValue = vnp_Params.get(fieldName);
-                if (fieldValue != null && !fieldValue.isEmpty()) {
-                    hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString())).append('=')
-                            .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                    if (itr.hasNext()) {
-                        query.append('&');
-                        hashData.append('&');
-                    }
+        currentOrderReferenceId = "MOMO" + System.currentTimeMillis();
+
+        // Gọi API server để lấy payUrl
+        executorService.execute(() -> {
+            try {
+                String payUrl = createPaymentRequest();
+                if (payUrl != null && !payUrl.isEmpty()) {
+                    runOnUiThread(() -> {
+                        openPaymentGateway(payUrl);
+                        startDeepLinkTimeout();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Lỗi khởi tạo thanh toán.", Toast.LENGTH_LONG).show();
+                        resetPaymentState();
+                    });
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Lỗi gọi API thanh toán: " + e.getMessage(), e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Không thể khởi tạo thanh toán MoMo.", Toast.LENGTH_LONG).show();
+                    resetPaymentState();
+                });
             }
-            String queryUrl = query.toString();
-            String vnp_HashSecret = "ANDG1IXPFGZL9MBYJDJRUMDZ83L79GCJ";
-            String vnp_SecureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
-            if (vnp_SecureHash == null || vnp_SecureHash.isEmpty()) {
-                throw new IllegalStateException("Failed to generate secure hash");
-            }
-            queryUrl = queryUrl.isEmpty() ? "vnp_SecureHash=" + vnp_SecureHash : queryUrl + "&vnp_SecureHash=" + vnp_SecureHash;
-            String finalUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?" + queryUrl;
-            Log.d(TAG, "Generated VNPAY URL: " + finalUrl);
-            return finalUrl;
-        } catch (Exception e) {
-            Log.e(TAG, "Error generating VNPAY URL: " + e.getMessage(), e);
-            Toast.makeText(this, "Không thể tạo URL thanh toán. Vui lòng kiểm tra log.", Toast.LENGTH_LONG).show();
+        });
+    }
+
+    private String createPaymentRequest() throws Exception {
+        URL url = new URL(BASE_URL);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Accept", "application/json");
+        conn.setDoOutput(true);
+        conn.setConnectTimeout(30000); // 30 giây
+        conn.setReadTimeout(30000); // 30 giây
+
+        JSONObject json = new JSONObject();
+        json.put("amount", (long) totalAmount);
+        json.put("orderId", currentOrderReferenceId);
+        json.put("orderInfo", "Thanh toán vé xem phim " + movieName);
+        json.put("redirectUrl", DEEP_LINK_URL);
+        json.put("ipnUrl", BASE_URL + "/ipn");
+        json.put("requestType", "captureWallet");
+        json.put("extraData", "");
+
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = json.toString().getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            String response = readResponse(conn);
+            JSONObject responseJson = new JSONObject(response);
+            return responseJson.optString("payUrl", null);
+        } else {
+            String errorResponse = readErrorResponse(conn);
+            Log.e(TAG, "Server error: " + responseCode + ", Response: " + errorResponse);
             return null;
         }
     }
 
-    private void openPaymentGateway(String url) {
-        if (url != null && !url.isEmpty()) {
+    private String readResponse(HttpURLConnection conn) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+        reader.close();
+        return response.toString();
+    }
+
+    private String readErrorResponse(HttpURLConnection conn) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+        reader.close();
+        return response.toString();
+    }
+
+    private void openPaymentGateway(String payUrl) {
+        if (payUrl != null && !payUrl.isEmpty()) {
             try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(browserIntent);
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(payUrl));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                Log.d(TAG, "Mở ứng dụng MoMo với payUrl: " + payUrl);
             } catch (Exception e) {
-                Toast.makeText(this, "Không thể mở cổng thanh toán. Vui lòng kiểm tra lại URL hoặc cài đặt ứng dụng.", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Lỗi mở ứng dụng MoMo: " + e.getMessage(), e);
+                Toast.makeText(this, "Không thể mở ứng dụng MoMo. Vui lòng kiểm tra cài đặt MoMo.", Toast.LENGTH_LONG).show();
+                resetPaymentState();
             }
         } else {
-            Toast.makeText(this, "URL thanh toán trống. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "URL thanh toán MoMo trống.", Toast.LENGTH_SHORT).show();
+            resetPaymentState();
+        }
+    }
+
+    private void startDeepLinkTimeout() {
+        isWaitingForDeepLink = true;
+        timeoutRunnable = () -> {
+            if (isWaitingForDeepLink) {
+                Log.w(TAG, "Hết thời gian chờ deep link cho đơn hàng: " + currentOrderReferenceId);
+                updatePaymentStatus("TIMEOUT");
+                showTimeoutDialog();
+            }
+        };
+        timeoutHandler.postDelayed(timeoutRunnable, DEEP_LINK_TIMEOUT);
+    }
+
+    private void showTimeoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Không nhận được kết quả")
+                .setMessage("Giao dịch MoMo có thể đã hoàn tất nhưng chưa nhận được phản hồi. Kiểm tra trạng thái?")
+                .setPositiveButton("Kiểm tra", (dialog, which) -> checkPaymentStatusManually())
+                .setNegativeButton("Hủy", (dialog, which) -> cancelPayment())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void handleDeepLink(Intent intent) {
+        if (intent == null || intent.getData() == null) return;
+
+        Uri uri = intent.getData();
+        if (DEEP_LINK_SCHEME.equals(uri.getScheme()) && DEEP_LINK_HOST.equals(uri.getHost())) {
+            resetPaymentState();
+            cleanupHandlers();
+
+            String resultCode = uri.getQueryParameter("resultCode");
+            String orderId = uri.getQueryParameter("orderId");
+            String message = uri.getQueryParameter("message");
+
+            Log.d(TAG, "Deep link nhận được - resultCode: " + resultCode + ", orderId: " + orderId + ", message: " + message);
+
+            if ("0".equals(resultCode)) {
+                // Thanh toán thành công, xác nhận với server
+                verifyPaymentWithServer(orderId);
+            } else {
+                // Thanh toán thất bại
+                updatePaymentStatus("FAILED");
+                String errorMessage = message != null ? message : "Thanh toán MoMo thất bại!";
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void verifyPaymentWithServer(String orderId) {
+        executorService.execute(() -> {
+            try {
+                URL url = new URL(BASE_URL + "/check-order-status?orderId=" + orderId);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(30000);
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    String response = readResponse(conn);
+                    JSONObject jsonResponse = new JSONObject(response);
+                    String status = jsonResponse.optString("status", "UNKNOWN");
+
+                    runOnUiThread(() -> {
+                        if ("SUCCESS".equals(status)) {
+                            updatePaymentStatus("SUCCESS");
+                            Toast.makeText(this, "Thanh toán MoMo thành công!", Toast.LENGTH_LONG).show();
+                            // Có thể chuyển sang màn hình kết quả hoặc đóng activity
+                            finish();
+                        } else {
+                            updatePaymentStatus("FAILED");
+                            Toast.makeText(this, "Thanh toán thất bại. Vui lòng kiểm tra lại!", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Lỗi xác nhận trạng thái thanh toán.", Toast.LENGTH_LONG).show();
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Lỗi xác nhận trạng thái: " + e.getMessage(), e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Lỗi xác nhận trạng thái thanh toán.", Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void updatePaymentStatus(String status) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_PAYMENT_DATA, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("paymentStatus", status);
+        editor.putString("orderId", currentOrderReferenceId);
+        editor.putLong("paymentEndTime", System.currentTimeMillis());
+        editor.apply();
+    }
+
+    private void navigateToPaymentStatusCheck() {
+        Intent intent = new Intent(this, PaymentResultActivity.class);
+        intent.putExtra("orderId", currentOrderReferenceId);
+        intent.putExtra("isTimeout", true);
+        startActivity(intent);
+    }
+
+    private void checkPaymentStatusFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_PAYMENT_DATA, MODE_PRIVATE);
+        String status = prefs.getString("paymentStatus", "UNKNOWN");
+        String orderId = prefs.getString("orderId", "");
+
+        // Chỉ xử lý nếu là order hiện tại
+        if (currentOrderReferenceId != null && currentOrderReferenceId.equals(orderId)) {
+            if ("SUCCESS".equals(status)) {
+                Toast.makeText(this, "Thanh toán MoMo thành công!", Toast.LENGTH_LONG).show();
+                resetPaymentState();
+                finish();
+            } else if ("FAILED".equals(status)) {
+                Toast.makeText(this, "Thanh toán MoMo thất bại!", Toast.LENGTH_LONG).show();
+                resetPaymentState();
+            }
+        }
+    }
+
+    private void showPaymentInProgressDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Thanh toán đang xử lý")
+                .setMessage("Bạn đang trong quá trình thanh toán MoMo. Nếu đã hoàn tất, bạn có thể kiểm tra trạng thái hoặc hủy.")
+                .setPositiveButton("Tôi đã thanh toán", (dialog, which) -> checkPaymentStatusManually())
+                .setNegativeButton("Hủy thanh toán", (dialog, which) -> cancelPayment())
+                .setNeutralButton("Tiếp tục chờ", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void checkPaymentStatusManually() {
+        if (currentOrderReferenceId == null) {
+            Toast.makeText(this, "Không có thông tin đơn hàng để kiểm tra.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d(TAG, "Kiểm tra trạng thái cho đơn hàng: " + currentOrderReferenceId);
+        Toast.makeText(this, "Đang kiểm tra trạng thái thanh toán...", Toast.LENGTH_SHORT).show();
+
+        // Gọi API để kiểm tra trạng thái
+        verifyPaymentWithServer(currentOrderReferenceId);
+    }
+
+    private void cancelPayment() {
+        resetPaymentState();
+        cleanupHandlers();
+        updatePaymentStatus("CANCELLED");
+        Toast.makeText(this, "Đã hủy thanh toán MoMo", Toast.LENGTH_SHORT).show();
+    }
+
+    private void resetPaymentState() {
+        isPaymentInProgress = false;
+        isWaitingForDeepLink = false;
+        btnConfirmPayment.setEnabled(true);
+        btnConfirmPayment.setText("Thanh toán");
+    }
+
+    private void cleanupHandlers() {
+        if (timeoutRunnable != null) {
+            timeoutHandler.removeCallbacks(timeoutRunnable);
+        }
+        if (checkRunnable != null) {
+            checkHandler.removeCallbacks(checkRunnable);
         }
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        try {
-            if (currentOrderReferenceId != null && !currentOrderReferenceId.isEmpty()) {
-                Toast.makeText(this, "Đang kiểm tra trạng thái thanh toán cho đơn hàng: " + currentOrderReferenceId + "...", Toast.LENGTH_LONG).show();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error in onResume: " + e.getMessage(), e);
-            Toast.makeText(this, "Lỗi kiểm tra trạng thái thanh toán.", Toast.LENGTH_SHORT).show();
+    public void onBackPressed() {
+        if (isPaymentInProgress) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Xác nhận")
+                    .setMessage("Thanh toán MoMo đang được xử lý. Bạn có chắc muốn thoát?")
+                    .setPositiveButton("Thoát", (dialog, which) -> {
+                        cancelPayment();
+                        super.onBackPressed();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        } else {
+            super.onBackPressed();
         }
     }
 }

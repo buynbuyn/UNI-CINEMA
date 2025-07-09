@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Payment Result Redirect</title>
+</head>
+<body>
+    <h1>Payment Result Redirect</h1>
+    <script>
+        // Lấy các tham số từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const ref = urlParams.get('ref');
+        const amount = urlParams.get('vnp_Amount');
+        const transactionNo = urlParams.get('vnp_TransactionNo');
+        const orderInfo = urlParams.get('vnp_OrderInfo');
+
+        // Xây dựng deep link với các tham số mặc định nếu thiếu
+        let deepLink = 'uni_cinema://payment-result';
+        const params = [];
+        if (code) params.push('code=' + encodeURIComponent(code));
+        if (ref) params.push('ref=' + encodeURIComponent(ref));
+        if (amount) params.push('vnp_Amount=' + encodeURIComponent(amount));
+        if (transactionNo) params.push('vnp_TransactionNo=' + encodeURIComponent(transactionNo));
+        if (orderInfo) params.push('vnp_OrderInfo=' + encodeURIComponent(orderInfo));
+
+        if (params.length > 0) {
+            deepLink += '?' + params.join('&');
+        }
+
+        // Chuyển hướng đến deep link
+        window.location = deepLink;
+
+        // Fallback nếu deep link không hoạt động (sau 1 giây)
+        setTimeout(() => {
+            if (document.hidden) return; // Không hiển thị nếu đã chuyển hướng thành công
+            alert('Ứng dụng Uni Cinema không được cài đặt hoặc không thể mở. Vui lòng cài đặt ứng dụng từ Google Play/App Store.');
+            // Chuyển hướng đến trang web hoặc store nếu cần
+            // window.location = 'https://play.google.com/store/apps/details?id=com.example.uni_cinema';
+        }, 1000);
+    </script>
+</body>
+</html>
