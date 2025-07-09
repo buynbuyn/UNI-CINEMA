@@ -33,6 +33,7 @@ public class RapFragment extends Fragment {
     private AppCompatButton btnContinue;
     private String selectedTheaterName = null;
     private String selectedTheaterId = null;
+    private String selectedAddressTheater = null;
     private String movieTitle;
     private String movieId;
 
@@ -70,7 +71,8 @@ public class RapFragment extends Fragment {
             if (selectedTheaterName != null) {
                 Bundle bundle = new Bundle();
                 bundle.putString("theaterName", selectedTheaterName);
-                bundle.putString("theaterId", selectedTheaterId); // ✅ thêm dòng này
+                bundle.putString("addressTheater", selectedAddressTheater);
+                bundle.putString("theaterId", selectedTheaterId);
 
                 if (movieId != null) bundle.putString("movieId", movieId);
                 if (movieTitle != null) bundle.putString("movieTitle", movieTitle);
@@ -133,9 +135,10 @@ public class RapFragment extends Fragment {
                     theaterList.clear();
                     for (DocumentSnapshot doc : snapshot.getDocuments()) {
                         String name = doc.getString("nameTheater");
+                        String address = doc.getString("addressTheater");
                         String id = doc.getId(); // lấy ID Firestore của document
                         if (name != null) {
-                            theaterList.add(new Region(provinceName, name, id));
+                            theaterList.add(new Region(provinceName, name, id, address));
                         }
                     }
 
@@ -143,6 +146,7 @@ public class RapFragment extends Fragment {
                     theaterAdapter = new TheaterAdapter(theaterList, selectedRegion -> {
                         selectedTheaterName = selectedRegion.getNameTheater();
                         selectedTheaterId = selectedRegion.getTheaterId();
+                        selectedAddressTheater = selectedRegion.getAddressTheater();
                         btnContinue.setVisibility(View.VISIBLE);
                     });
                     recyclerViewTheater.setAdapter(theaterAdapter);

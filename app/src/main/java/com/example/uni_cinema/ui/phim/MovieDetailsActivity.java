@@ -18,7 +18,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+
 import com.bumptech.glide.Glide;
+import com.example.uni_cinema.MainActivity;
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.ui.rap.RapFragment;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -30,7 +34,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
     private TextView txtTieuDe, txtThoiLuong, txtTheLoai, txtThongKeTuoi, txtThongKeGioiTinh, txtMoTa;
     private ImageView imgPoster;
-    private Button btn_order;
+    private  Button btnBuyTicket;
     private FirebaseFirestore db;
 
     @Override
@@ -58,9 +62,18 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
         // Lấy id phim
         String movieId = getIntent().getStringExtra("movieId");
+        String movieTitle = txtTieuDe.getText().toString(); // 👈 lấy tiêu đề phim đã hiển thị
         if (movieId != null) {
             taiDuLieuPhim(movieId);
         }
+        btnBuyTicket = findViewById(R.id.btnBuyTicket);
+        btnBuyTicket.setOnClickListener(v -> {
+            Intent intent = new Intent(MovieDetailsActivity.this, MainActivity.class);
+            intent.putExtra("movieId", movieId);
+            intent.putExtra("movieTitle", movieTitle);
+            intent.putExtra("goToRap", true); // 👈 dùng để đánh dấu cần mở Fragment Rap
+            startActivity(intent); // 📦 chuyển sang fragment rạp
+        });
 
         ImageButton btn_back = findViewById(R.id.btn_back);
         btn_back.setOnClickListener(v -> {

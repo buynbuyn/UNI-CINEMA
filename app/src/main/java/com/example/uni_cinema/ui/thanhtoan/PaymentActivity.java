@@ -340,7 +340,7 @@ public class PaymentActivity extends AppCompatActivity {
         json.put("orderId", currentOrderReferenceId);
         json.put("orderInfo", "Thanh toán vé xem phim " + movieName);
         json.put("redirectUrl", DEEP_LINK_URL);
-        json.put("ipnUrl", BASE_URL + "/ipn");
+        json.put("ipnUrl", BASE_URL + "/payment/ipn");
         json.put("requestType", "captureWallet");
         json.put("extraData", "");
 

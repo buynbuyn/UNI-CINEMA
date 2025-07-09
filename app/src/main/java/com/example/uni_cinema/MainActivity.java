@@ -53,7 +53,14 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView = binding.navView;
 
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-
+        Intent intent = getIntent();
+        if (intent != null && intent.getBooleanExtra("goToRap", false)) {
+            Bundle bundle = new Bundle();
+            bundle.putString("movieId", intent.getStringExtra("movieId"));
+            bundle.putString("movieTitle", intent.getStringExtra("movieTitle"));
+            navController.navigate(R.id.nav_rap, bundle);
+            intent.removeExtra("goToRap");
+        }
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_lichsu, R.id.nav_khuyen_mai,
                 R.id.nav_phim, R.id.nav_qua_tang, R.id.nav_rap,

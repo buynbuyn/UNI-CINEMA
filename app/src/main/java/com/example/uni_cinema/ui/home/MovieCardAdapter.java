@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import com.example.uni_cinema.R;
+import com.example.uni_cinema.ui.phim.MovieDetailsActivity;
 
 import java.util.List;
 
@@ -69,6 +71,11 @@ public class MovieCardAdapter extends RecyclerView.Adapter<MovieCardAdapter.View
             bundle.putString("movieId", movie.getId()); // truyền dữ liệu sang fragment
             bundle.putString("movieTitle", movie.getTitle());
             Navigation.findNavController(v).navigate(R.id.nav_rap, bundle);
+        });
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(holder.itemView.getContext(), MovieDetailsActivity.class);
+            intent.putExtra("movieId", movie.getId());
+            holder.itemView.getContext().startActivity(intent);
         });
 
     }
