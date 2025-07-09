@@ -1,5 +1,6 @@
 package com.example.uni_cinema.ui.phongchieu;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,23 +23,24 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import android.content.Intent;
-
+import java.util.Locale;
 import java.text.DecimalFormat;
-
 
 public class DeskActivity extends AppCompatActivity {
 
     private GridLayout seatContainer;
+    private GridLayout coupleSeatContainer;
     private TextView infoTextView;
-    private Button confirmerButton;
     private TextView totalPriceTextView;
+    private Button confirmerButton;
     private List<Desk> deskList;
     private Map<String, Desk> selectedDesks;
     private FirebaseFirestore db;
@@ -57,6 +59,7 @@ public class DeskActivity extends AppCompatActivity {
         dateTime = getIntent().getStringExtra("timeRange");
         screeningId = getIntent().getStringExtra("screeningId");
         screenRoomId = getIntent().getStringExtra("idScreeningRoom");
+        Log.d("DESK_DEBUG", "Received screeningId: " + screeningId + ", screenRoomId: " + screenRoomId);
 
         deskList = new ArrayList<>();
         selectedDesks = new HashMap<>();
@@ -97,19 +100,31 @@ public class DeskActivity extends AppCompatActivity {
 
     private void registryView() {
         seatContainer = findViewById(R.id.seat_container);
+        coupleSeatContainer = findViewById(R.id.couple_seat_container);
         infoTextView = findViewById(R.id.info_text_view);
-        totalPriceTextView = findViewById(R.id.total_price_text);
+        totalPriceTextView = findViewById(R.id.total_price_text); // Initialize totalPriceTextView
         confirmerButton = findViewById(R.id.confirm_button);
+
+        if (seatContainer == null || coupleSeatContainer == null || infoTextView == null || totalPriceTextView == null || confirmerButton == null) {
+            Log.e("DESK_DEBUG", "One or more views not found: seatContainer=" + seatContainer + ", coupleSeatContainer=" + coupleSeatContainer +
+                    ", infoTextView=" + infoTextView + ", totalPriceTextView=" + totalPriceTextView + ", confirmerButton=" + confirmerButton);
+            finish();
+            return;
+        }
+
         infoTextView.setText("Vui lòng chọn ghế");
+        totalPriceTextView.setText("Tạm tính: 0 VND");
     }
 
     private void generateDesks() {
         if (screeningId == null || screenRoomId == null) {
             Toast.makeText(this, "Dữ liệu suất chiếu hoặc phòng chiếu không hợp lệ", Toast.LENGTH_SHORT).show();
+            Log.e("DESK_DEBUG", "screeningId or screenRoomId is null");
             return;
         }
 
         seatContainer.removeAllViews();
+        coupleSeatContainer.removeAllViews(); // Clear coupleSeatContainer
         deskList.clear();
         selectedDesks.clear();
 
@@ -121,6 +136,7 @@ public class DeskActivity extends AppCompatActivity {
                         String idDesk = doc.getId();
                         if (idDesk != null) deskIds.add(idDesk);
                     }
+                    Log.d("DESK_DEBUG", "Fetched desk IDs: " + deskIds);
 
                     if (deskIds.isEmpty()) {
                         Toast.makeText(this, "Không tìm thấy ghế nào", Toast.LENGTH_SHORT).show();
@@ -136,6 +152,7 @@ public class DeskActivity extends AppCompatActivity {
                                         deskCategoryMap.put(doc.getId(), categoryName);
                                     }
                                 }
+                                Log.d("DESK_DEBUG", "Fetched desk categories: " + deskCategoryMap);
 
                                 List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
                                 for (String idDesk : deskIds) {
@@ -158,16 +175,29 @@ public class DeskActivity extends AppCompatActivity {
                                                         Boolean state = deskDoc.getBoolean("stateDesk");
                                                         boolean isAvailable = state != null ? state : true;
 
+                                                        if (price == null) {
+                                                            Log.w("DESK_DEBUG", "Price is null for desk: " + idDesk);
+                                                            price = 0L;
+                                                        }
+                                                        if (rowDesk == null) {
+                                                            Log.w("DESK_DEBUG", "rowDesk is null for desk: " + idDesk);
+                                                            rowDesk = 0L;
+                                                        }
+                                                        if (coloumnDesk == null) {
+                                                            Log.w("DESK_DEBUG", "coloumnDesk is null for desk: " + idDesk);
+                                                            coloumnDesk = 0L;
+                                                        }
+
                                                         tempDeskList.add(new Desk(
                                                                 idDesk,
                                                                 categoryName,
-                                                                price != null ? price.intValue() : 0,
+                                                                price.intValue(),
                                                                 isAvailable,
-                                                                rowDesk != null ? rowDesk.intValue() : 0,
-                                                                coloumnDesk != null ? coloumnDesk.intValue() : 0
+                                                                rowDesk.intValue(),
+                                                                coloumnDesk.intValue()
                                                         ));
                                                     } catch (Exception e) {
-                                                        Log.e("DESK_DEBUG", "Error parsing desk document", e);
+                                                        Log.e("DESK_DEBUG", "Error parsing desk document: " + deskDoc.getId() + ", error: " + e.getMessage(), e);
                                                     }
                                                 }
                                             }
@@ -177,9 +207,22 @@ public class DeskActivity extends AppCompatActivity {
                                                     .thenComparingInt(Desk::getColoumnDesk));
                                             deskList.clear();
                                             deskList.addAll(tempDeskList);
+                                            Log.d("DESK_DEBUG", "Sorted deskList: " + deskList);
                                             loadBookedSeatsAndRender();
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("DESK_DEBUG", "Error fetching desk details: " + e.getMessage(), e);
+                                            Toast.makeText(this, "Lỗi khi tải dữ liệu ghế", Toast.LENGTH_SHORT).show();
                                         });
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("DESK_DEBUG", "Error fetching desk categories: " + e.getMessage(), e);
+                                Toast.makeText(this, "Lỗi khi tải danh mục ghế", Toast.LENGTH_SHORT).show();
                             });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("DESK_DEBUG", "Error fetching desk IDs: " + e.getMessage(), e);
+                    Toast.makeText(this, "Lỗi khi tải dữ liệu phòng chiếu", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -193,21 +236,63 @@ public class DeskActivity extends AppCompatActivity {
                         String seatId = doc.getString("seatId");
                         if (seatId != null) bookedSeats.put(seatId, true);
                     }
+                    Log.d("DESK_DEBUG", "Booked seats: " + bookedSeats.keySet());
 
-                    int maxRows = deskList.stream().mapToInt(Desk::getRowDesk).max().orElse(0);
-                    int maxColumns = deskList.stream().mapToInt(Desk::getColoumnDesk).max().orElse(0);
-                    seatContainer.setRowCount(maxRows > 0 ? maxRows : 1);
-                    seatContainer.setColumnCount(maxColumns > 0 ? maxColumns : 1);
+                    // Tách ghế đôi và ghế thường
+                    List<Desk> coupleDesks = new ArrayList<>();
+                    List<Desk> regularDesks = new ArrayList<>();
+                    for (Desk desk : deskList) {
+                        if ("Couple".equalsIgnoreCase(desk.getCategoryName())) {
+                            coupleDesks.add(desk);
+                        } else {
+                            regularDesks.add(desk);
+                        }
+                    }
+
+                    // Thiết lập cấu hình cho coupleSeatContainer
+                    int maxCoupleRows = coupleDesks.stream().mapToInt(Desk::getRowDesk).max().orElse(0);
+                    int maxCoupleColumns = coupleDesks.stream().mapToInt(Desk::getColoumnDesk).max().orElse(0);
+                    coupleSeatContainer.setRowCount(maxCoupleRows > 0 ? maxCoupleRows : 1);
+                    coupleSeatContainer.setColumnCount(maxCoupleColumns > 0 ? maxCoupleColumns : 1);
+                    coupleSeatContainer.removeAllViews();
+
+                    // Thiết lập cấu hình cho seatContainer
+                    int maxRegularRows = regularDesks.stream().mapToInt(Desk::getRowDesk).max().orElse(0);
+                    int maxRegularColumns = regularDesks.stream().mapToInt(Desk::getColoumnDesk).max().orElse(0);
+                    seatContainer.setRowCount(maxRegularRows > 0 ? maxRegularRows : 1);
+                    seatContainer.setColumnCount(maxRegularColumns > 0 ? maxRegularColumns : 1);
                     seatContainer.removeAllViews();
 
-                    for (Desk desk : deskList) {
-                        if (desk.getRowDesk() <= 0 || desk.getColoumnDesk() <= 0) continue;
+                    // Render ghế đôi
+                    for (Desk desk : coupleDesks) {
+                        if (desk.getRowDesk() <= 0 || desk.getColoumnDesk() <= 0) {
+                            Log.e("DESK_DEBUG", "Invalid row or column for couple desk: " + desk.getIdDesk() +
+                                    ", row: " + desk.getRowDesk() + ", column: " + desk.getColoumnDesk());
+                            continue;
+                        }
 
-                        Button deskButton = createDeskButton(desk.getIdDesk(),
-                                "VIP".equalsIgnoreCase(desk.getCategoryName()),
-                                "Couple".equalsIgnoreCase(desk.getCategoryName()),
-                                bookedSeats, desk.getPrice());
+                        Button deskButton = createDeskButton(desk.getIdDesk(), "VIP".equalsIgnoreCase(desk.getCategoryName()),
+                                "Couple".equalsIgnoreCase(desk.getCategoryName()), bookedSeats, desk.getPrice());
+                        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                        params.rowSpec = GridLayout.spec(desk.getRowDesk() - 1);
+                        params.columnSpec = GridLayout.spec(desk.getColoumnDesk() - 1);
+                        params.width = dpToPx(80);
+                        params.height = dpToPx(40);
+                        params.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+                        deskButton.setLayoutParams(params);
+                        coupleSeatContainer.addView(deskButton);
+                    }
 
+                    // Render ghế thường
+                    for (Desk desk : regularDesks) {
+                        if (desk.getRowDesk() <= 0 || desk.getColoumnDesk() <= 0) {
+                            Log.e("DESK_DEBUG", "Invalid row or column for regular desk: " + desk.getIdDesk() +
+                                    ", row: " + desk.getRowDesk() + ", column: " + desk.getColoumnDesk());
+                            continue;
+                        }
+
+                        Button deskButton = createDeskButton(desk.getIdDesk(), "VIP".equalsIgnoreCase(desk.getCategoryName()),
+                                "Couple".equalsIgnoreCase(desk.getCategoryName()), bookedSeats, desk.getPrice());
                         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                         params.rowSpec = GridLayout.spec(desk.getRowDesk() - 1);
                         params.columnSpec = GridLayout.spec(desk.getColoumnDesk() - 1);
@@ -217,6 +302,12 @@ public class DeskActivity extends AppCompatActivity {
                         deskButton.setLayoutParams(params);
                         seatContainer.addView(deskButton);
                     }
+
+                    Log.d("DESK_DEBUG", "Rendered couple grid with " + coupleDesks.size() + " desks and regular grid with " + regularDesks.size() + " desks");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("DESK_DEBUG", "Error fetching bookings: " + e.getMessage(), e);
+                    Toast.makeText(this, "Lỗi khi kiểm tra ghế đã đặt", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -225,12 +316,6 @@ public class DeskActivity extends AppCompatActivity {
         desk.setId(View.generateViewId());
         String displayText = deskId.length() > 1 ? deskId.substring(6) : deskId;
         desk.setText(displayText);
-
-        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-        params.width = dpToPx(50);
-        params.height = dpToPx(50);
-        params.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
-        desk.setLayoutParams(params);
 
         int defaultColor;
         if (isCouple) {
@@ -259,17 +344,12 @@ public class DeskActivity extends AppCompatActivity {
                     selectedDesks.remove(deskId);
                     desk.setBackgroundColor((Integer) desk.getTag());
                 } else {
-                    if (selectedDesks.size() >= 6) {
-                        Toast.makeText(this, "Chỉ được chọn tối đa 6 ghế", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
                     selectedDesks.put(deskId, deskData);
                     desk.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"));
                 }
                 updateInfoText();
             }
         });
-
 
         return desk;
     }
@@ -288,10 +368,10 @@ public class DeskActivity extends AppCompatActivity {
 
             seatsInfo.append(String.join(", ", seatNames));
             infoTextView.setText(seatsInfo.toString());
-            DecimalFormat formatter = new DecimalFormat("#,###");
-            String formattedPrice = formatter.format(totalPrice).replace(',', '.');
+            DecimalFormat formatter = new DecimalFormat("#,###", new DecimalFormatSymbols(Locale.forLanguageTag("vi-VN")));
+            String formattedPrice = formatter.format(totalPrice);
             totalPriceTextView.setText("Tạm tính: " + formattedPrice + " VND");
-
+            Log.d("DESK_DEBUG", "Total price calculated: " + totalPrice);
         } else {
             infoTextView.setText("Vui lòng chọn ghế");
             totalPriceTextView.setText("Tạm tính: 0 VND");

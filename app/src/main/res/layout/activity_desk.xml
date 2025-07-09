@@ -23,18 +23,38 @@
             <ScrollView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:paddingTop="200dp"
+                android:paddingTop="100dp"
                 android:paddingLeft="90dp"
                 android:background="@drawable/manhinh">
 
-                <GridLayout
-                    android:id="@+id/seat_container"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:columnCount="10"
-                    android:orientation="horizontal"
-                    android:padding="8dp"
-                    android:background="@android:color/transparent"/>
+                    android:orientation="vertical"
+                    android:layout_marginTop="100dp">
+                    <!-- GridLayout cho ghế thường -->
+                    <GridLayout
+                        android:id="@+id/seat_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@android:color/transparent"
+                        android:columnCount="10"
+                        android:orientation="horizontal"
+                        android:padding="8dp" />
+
+                    <!-- GridLayout cho ghế đôi -->
+                    <GridLayout
+                        android:id="@+id/couple_seat_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:columnCount="4"
+                        android:orientation="horizontal"
+                        android:layout_marginStart="30dp"
+                        android:padding="8dp" />
+
+                </LinearLayout>
             </ScrollView>
         </FrameLayout>
     </HorizontalScrollView>
