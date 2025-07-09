@@ -47,11 +47,12 @@ public class PaymentResultActivity extends AppCompatActivity {
     private ArrayList<String> selectedDeskCategories;
     private ArrayList<Integer> selectedDeskPrices;
     private int totalAmount;
+    private int discount; // Thêm trường discount
     private String movieName;
     private String screeningDateTime;
     private String screenRoomName;
     private String orderId;
-    private String idUser;
+    private String uid; // Thay idUser bằng uid
     private boolean paymentSuccess;
     private String idMethodPayment;
 
@@ -63,12 +64,12 @@ public class PaymentResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_result);
 
-        initializeViews();
         retrieveIntentData();
         handlePaymentResult();
         saveSeatsToSubcollection();
         sendPaymentDetailsToServer(); // Gửi dữ liệu lên server
         setupButtonListeners();
+        initializeViews();
     }
 
     private void initializeViews() {
@@ -108,17 +109,18 @@ public class PaymentResultActivity extends AppCompatActivity {
                 Log.d(TAG, "Extras keys: " + extras.keySet().toString());
                 selectedDeskIds = extras.getStringArrayList("selectedDeskIds");
                 totalAmount = extras.getInt("totalPrice", 0);
+                discount = extras.getInt("discount", 0); // Lấy discount từ Intent, mặc định là 0
                 movieName = extras.getString("movieName", "N/A");
                 screeningDateTime = extras.getString("screeningDateTime", "N/A");
                 screenRoomName = extras.getString("screenRoomName", "N/A");
                 selectedDeskCategories = extras.getStringArrayList("selectedDeskCategories");
                 selectedDeskPrices = extras.getIntegerArrayList("selectedDeskPrices");
                 orderId = extras.getString("orderId", "N/A");
-                idUser = extras.getString("idUser", "N/A");
+                uid = extras.getString("uid", "N/A"); // Thay idUser bằng uid
                 paymentSuccess = extras.getBoolean("payment_success", false);
                 idMethodPayment = extras.getString("idMethodPayment", "N/A");
 
-                Log.d(TAG, "Received data - orderId: " + orderId + ", totalAmount: " + totalAmount + ", selectedDeskIds: " + selectedDeskIds);
+                Log.d(TAG, "Received data - orderId: " + orderId + ", totalAmount: " + totalAmount + ", selectedDeskIds: " + selectedDeskIds + ", discount: " + discount);
                 if (selectedDeskIds == null) selectedDeskIds = new ArrayList<>();
                 if (selectedDeskCategories == null) selectedDeskCategories = new ArrayList<>();
                 if (selectedDeskPrices == null) selectedDeskPrices = new ArrayList<>();
@@ -137,8 +139,9 @@ public class PaymentResultActivity extends AppCompatActivity {
     private void loadOrderInfoFromSharedPreferences() {
         SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
         orderId = prefs.getString("orderId", "N/A");
-        idUser = prefs.getString("idUser", "N/A");
+        uid = prefs.getString("uid", "N/A"); // Thay idUser bằng uid
         totalAmount = prefs.getInt("totalPrice", 0); // Chuyển từ long sang int
+        discount = prefs.getInt("discount", 0); // Lấy discount từ SharedPreferences, mặc định là 0
         movieName = prefs.getString("movieName", "N/A");
         screeningDateTime = prefs.getString("screeningDateTime", "N/A");
         screenRoomName = prefs.getString("screenRoomName", "N/A");
@@ -189,7 +192,7 @@ public class PaymentResultActivity extends AppCompatActivity {
             tvPaymentMethod.setText("Phương thức thanh toán: " + idMethodPayment);
         }
         if (tvUserId != null) {
-            tvUserId.setText("ID Người dùng: " + idUser);
+            tvUserId.setText("UID Người dùng: " + uid); // Cập nhật text để hiển thị uid
         }
     }
 
@@ -296,13 +299,6 @@ public class PaymentResultActivity extends AppCompatActivity {
                     JSONObject json = new JSONObject(response.toString());
                     String status = json.optString("status", "UNKNOWN");
 
-                    runOnUiThread(() -> {
-                        if ("SUCCESS".equals(status)) {
-                            Toast.makeText(this, "Xác nhận từ server: Thanh toán thành công!", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(this, "Xác nhận từ server: Giao dịch chưa hoàn tất hoặc không tìm thấy.", Toast.LENGTH_LONG).show();
-                        }
-                    });
                 } else {
                     runOnUiThread(() -> Toast.makeText(this, "Lỗi khi xác minh thanh toán từ server.", Toast.LENGTH_SHORT).show());
                 }
@@ -338,6 +334,35 @@ public class PaymentResultActivity extends AppCompatActivity {
     private void sendPaymentDetailsToServer() {
         new Thread(() -> {
             try {
+                // Lấy lại dữ liệu từ deep link nếu có
+                Intent intent = getIntent();
+                Uri data = intent.getData();
+                String resultCode = null, transId = null, message = null, amount = null, orderInfo = null;
+                if (Intent.ACTION_VIEW.equals(intent.getAction()) && data != null) {
+                    resultCode = data.getQueryParameter("resultCode");
+                    transId = data.getQueryParameter("transId");
+                    message = data.getQueryParameter("message");
+                    amount = data.getQueryParameter("amount");
+                    orderInfo = data.getQueryParameter("orderInfo");
+                }
+
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("orderId", orderId);
+                payload.put("uid", uid); // Thay idUser bằng uid
+                payload.put("totalAmount", totalAmount);
+                payload.put("discount", discount); // Thêm discount vào payload
+                payload.put("selectedDeskIds", selectedDeskIds);
+                payload.put("movieName", movieName);
+                payload.put("screeningDateTime", screeningDateTime);
+                payload.put("screenRoomName", screenRoomName);
+                payload.put("paymentSuccess", paymentSuccess);
+                payload.put("idMethodPayment", idMethodPayment);
+                payload.put("timestamp", System.currentTimeMillis());
+                payload.put("resultCode", resultCode);
+                payload.put("transId", transId);
+                payload.put("message", message);
+                payload.put("amount", amount);
+                payload.put("orderInfo", orderInfo);
                 URL url = new URL(SERVER_URL);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -346,24 +371,32 @@ public class PaymentResultActivity extends AppCompatActivity {
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(10000);
 
-                // Tạo JSON payload
-                JSONObject jsonPayload = new JSONObject();
-                jsonPayload.put("orderId", orderId);
-                jsonPayload.put("selectedDeskIds", new JSONObject().put("ids", selectedDeskIds != null ? selectedDeskIds : new ArrayList<>()));
-                jsonPayload.put("totalAmount", totalAmount);
-                jsonPayload.put("movieName", movieName);
-                jsonPayload.put("screeningDateTime", screeningDateTime);
-                jsonPayload.put("screenRoomName", screenRoomName);
-                jsonPayload.put("idUser", idUser);
-                jsonPayload.put("idMethodPayment", idMethodPayment);
-                jsonPayload.put("paymentSuccess", paymentSuccess);
+                // 4. Chuyển Map -> JSON string thủ công (không dùng JSONObject)
+                StringBuilder json = new StringBuilder("{");
+                for (Map.Entry<String, Object> entry : payload.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        json.append("\"").append(entry.getKey()).append("\": \"")
+                                .append(entry.getValue()).append("\", ");
+                    } else if (entry.getValue() instanceof ArrayList) {
+                        json.append("\"").append(entry.getKey()).append("\": ")
+                                .append(new org.json.JSONArray((ArrayList<?>) entry.getValue()).toString()).append(", ");
+                    } else {
+                        json.append("\"").append(entry.getKey()).append("\": ")
+                                .append(entry.getValue()).append(", ");
+                    }
+                }
+                if (json.toString().endsWith(", ")) {
+                    json.setLength(json.length() - 2);
+                }
+                json.append("}");
 
-                // Gửi yêu cầu
+                // 5. Gửi dữ liệu
                 try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = jsonPayload.toString().getBytes("utf-8");
+                    byte[] input = json.toString().getBytes("utf-8");
                     os.write(input, 0, input.length);
                 }
 
+                // 6. Đọc phản hồi
                 int responseCode = conn.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -373,13 +406,11 @@ public class PaymentResultActivity extends AppCompatActivity {
                         response.append(line);
                     }
                     in.close();
-
-                    runOnUiThread(() -> Toast.makeText(this, "Dữ liệu đã được gửi lên server!", Toast.LENGTH_SHORT).show());
-                    Log.d(TAG, "Server response: " + response.toString());
                 } else {
                     runOnUiThread(() -> Toast.makeText(this, "Lỗi gửi dữ liệu lên server.", Toast.LENGTH_SHORT).show());
                     Log.e(TAG, "Server error: " + responseCode);
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối server.", Toast.LENGTH_SHORT).show());
@@ -399,9 +430,10 @@ public class PaymentResultActivity extends AppCompatActivity {
                 orderData.put("screeningDateTime", screeningDateTime);
                 orderData.put("screenRoomName", screenRoomName);
                 orderData.put("totalAmount", totalAmount);
-                orderData.put("idUser", idUser);
+                orderData.put("uid", uid); // Thay idUser bằng uid
                 orderData.put("paymentSuccess", paymentSuccess);
                 orderData.put("idMethodPayment", idMethodPayment);
+                orderData.put("discount", discount); // Thêm discount vào orderData
                 orderData.put("timestamp", System.currentTimeMillis()); // Thêm thời gian tạo hóa đơn
 
                 orderDocRef.set(orderData)
