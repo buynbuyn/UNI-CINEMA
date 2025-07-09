@@ -530,6 +530,7 @@ public class PaymentActivity extends AppCompatActivity {
             if ("0".equals(resultCode)) {
                 // Thanh toán thành công, xác nhận với server
                 verifyPaymentWithServer(orderId);
+                navigateToPaymentStatusCheck();
             } else {
                 // Thanh toán thất bại
                 updatePaymentStatus("FAILED");
