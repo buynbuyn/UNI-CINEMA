@@ -41,7 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class SuatchieuFragment extends Fragment {
-    private TextView tvTheaterName;
+    private TextView tvTheaterName, tvMapAddress;
     private RecyclerView recyclerDate, recyclerScreening;
     private DateAdapter dateAdapter;
     private ScreeningAdapter screeningAdapter;
@@ -66,6 +66,7 @@ public class SuatchieuFragment extends Fragment {
         tvTheaterName = view.findViewById(R.id.tvTheaterName);
         recyclerDate = view.findViewById(R.id.recyclerDate);
         recyclerScreening = view.findViewById(R.id.recyclerScreening);
+        tvMapAddress = view.findViewById(R.id.tvMapAddress);
         db = FirebaseFirestore.getInstance();
 
         Bundle args = getArguments();
@@ -74,6 +75,9 @@ public class SuatchieuFragment extends Fragment {
             movieId = args.getString("movieId");
             movieTitle = args.getString("movieTitle");
             tvTheaterName.setText(args.getString("theaterName", "RẠP CHIẾU PHIM"));
+            String address = args.getString("addressTheater", "Không có địa chỉ");
+            tvMapAddress.setText("Vị trí rạp: " + address);
+
         }
 
         recyclerDate.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));

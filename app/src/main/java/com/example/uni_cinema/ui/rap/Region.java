@@ -4,8 +4,10 @@ public class Region {
     private String nameProvince;
     private String nameTheater;
     private String theaterId;
+    private String addressTheater;
 
-    public Region() {} // Firebase needs this
+    public Region() {
+    } // Firebase needs this
 
     // Dùng cho vùng (province only)
     public Region(String nameProvince) {
@@ -13,10 +15,11 @@ public class Region {
     }
 
     // Dùng cho rạp (đầy đủ thông tin)
-    public Region(String nameProvince, String nameTheater, String theaterId) {
+    public Region(String nameProvince, String nameTheater, String theaterId, String addressTheater) {
         this.nameProvince = nameProvince;
         this.nameTheater = nameTheater;
         this.theaterId = theaterId;
+        this.addressTheater = addressTheater;
     }
 
     public String getNameProvince() {
@@ -33,6 +36,14 @@ public class Region {
 
     public void setNameTheater(String nameTheater) {
         this.nameTheater = nameTheater;
+    }
+
+    public String getAddressTheater() {
+        return addressTheater;
+    }
+
+    public void setAddressTheater(String addressTheater) {
+        this.addressTheater = addressTheater;
     }
 
     public String getTheaterId() {

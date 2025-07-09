@@ -82,7 +82,7 @@ public class ScreeningAdapter extends RecyclerView.Adapter<ScreeningAdapter.Scre
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            params.setMarginEnd(10);
+            params.setMarginEnd(20);
             slotView.setLayoutParams(params);
 
             if (rowLayout != null) {
