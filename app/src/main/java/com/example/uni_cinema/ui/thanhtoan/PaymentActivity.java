@@ -16,6 +16,10 @@ import android.widget.TextView;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity; // Import LoginActivity
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -71,6 +75,7 @@ public class PaymentActivity extends AppCompatActivity {
 
     private String selectedPaymentMethod = "mã QR";
     private String currentOrderReferenceId;
+    private int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -239,7 +244,7 @@ public class PaymentActivity extends AppCompatActivity {
             String vnp_OrderInfo = "ThanhToanVePhim_" + vnp_TxnRef;
             String vnp_OrderType = "billpayment";
             String vnp_Locale = "vn";
-            String vnp_ReturnUrl = "uni_cinema://payment-result";
+            String vnp_ReturnUrl = "https://sandbox.vnpayment.vn"; // hoặc trang trống
             String vnp_IpAddr = "127.0.0.1";
 
             java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
@@ -311,12 +316,55 @@ public class PaymentActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         try {
-            if (currentOrderReferenceId != null && !currentOrderReferenceId.isEmpty()) {
-                Toast.makeText(this, "Đang kiểm tra trạng thái thanh toán cho đơn hàng: " + currentOrderReferenceId + "...", Toast.LENGTH_LONG).show();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            CollectionReference ordersRef = db.collection("orders");
+            // Lấy URL từ Clipboard hoặc kiểm tra trạng thái đơn hàng nếu cần (Cách 1: tự kiểm tra)
+            SharedPreferences prefs = getSharedPreferences("PaymentData", MODE_PRIVATE);
+            String lastOrderId = currentOrderReferenceId; // Dùng orderId hiện tại để kiểm tra trạng thái
+
+            if (lastOrderId != null && !lastOrderId.isEmpty()) {
+                Log.d(TAG, "Đang kiểm tra trạng thái đơn hàng: " + lastOrderId);
+
+                // GIẢ LẬP KẾT QUẢ (bạn cần thay bằng gọi API server nếu có)
+                boolean isPaymentSuccess = true; // Hoặc false nếu muốn giả lập thất bại
+
+                if (isPaymentSuccess) {
+                    Toast.makeText(this, "Thanh toán thành công cho đơn hàng " + lastOrderId, Toast.LENGTH_LONG).show();
+                    Task<QuerySnapshot> querySnapshotTask = ordersRef.get().addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            long count = task.getResult().size(); // Get the number of documents
+                            String OrderId = "idOrder" + String.format("%027d", count + 1); // Generate lastOrderId
+                            // TODO: Cập nhật trạng thái đơn hàng vào Firebase hoặc Server nếu cần
+
+                            Intent intent = new Intent(this, PaymentResultActivity.class);
+                            intent.putExtra("payment_success", true);
+                            intent.putExtra("order_id", OrderId);
+                            intent.putExtra("idUser", getSharedPreferences("AppPrefs", MODE_PRIVATE).getString("user_uid", ""));
+                            intent.putExtra("totalPrice", totalAmount);
+                            intent.putExtra("idMethodPayment", selectedPaymentMethod);
+                            intent.putStringArrayListExtra("selectedDeskIds", selectedDeskIds);
+                            intent.putExtra("movieName", movieName);
+                            intent.putExtra("screeningDateTime", screeningDateTime);
+                            intent.putExtra("screenRoomName", screenRoomName);
+                            startActivity(intent);
+                            finish();
+                        }
+                    })
+                ;} else {
+                    Toast.makeText(this, "Thanh toán thất bại hoặc bị hủy!", Toast.LENGTH_LONG).show();
+
+                    Intent intent = new Intent(this, PaymentResultActivity.class);
+                    intent.putExtra("payment_success", false);
+                    intent.putExtra("order_id", lastOrderId);
+                    startActivity(intent);
+                    finish();
+                }
+            } else {
+                Log.w(TAG, "Không có mã đơn hàng để kiểm tra.");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error in onResume: " + e.getMessage(), e);
-            Toast.makeText(this, "Lỗi kiểm tra trạng thái thanh toán.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Lỗi kiểm tra kết quả thanh toán: " + e.getMessage(), e);
+            Toast.makeText(this, "Lỗi khi kiểm tra kết quả thanh toán.", Toast.LENGTH_SHORT).show();
         }
     }
 }
