@@ -389,11 +389,39 @@ public class PaymentResultActivity extends AppCompatActivity {
 
     private void setupButtonListeners() {
         btnBack.setOnClickListener(v -> finish());
+
         btnCompletePayment.setOnClickListener(v -> {
-            Intent mainIntent = new Intent(PaymentResultActivity.this, MainActivity.class);
-            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(mainIntent);
-            finish();
+            // Lưu hóa đơn vào Firestore collection "orders"
+            if (orderId != null && !orderId.isEmpty()) {
+                DocumentReference orderDocRef = ordersRef.document(orderId);
+                Map<String, Object> orderData = new HashMap<>();
+                orderData.put("movieName", movieName);
+                orderData.put("screeningDateTime", screeningDateTime);
+                orderData.put("screenRoomName", screenRoomName);
+                orderData.put("totalAmount", totalAmount);
+                orderData.put("idUser", idUser);
+                orderData.put("paymentSuccess", paymentSuccess);
+                orderData.put("idMethodPayment", idMethodPayment);
+                orderData.put("timestamp", System.currentTimeMillis()); // Thêm thời gian tạo hóa đơn
+
+                orderDocRef.set(orderData)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "Order saved successfully with ID: " + orderId);
+                            // Lưu subcollection "seats" với idDesk
+                            saveSeatsToSubcollection();
+                            // Chuyển về MainActivity sau khi lưu thành công
+                            Intent mainIntent = new Intent(PaymentResultActivity.this, MainActivity.class);
+                            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(mainIntent);
+                            finish();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error saving order: " + e.getMessage());
+                            Toast.makeText(this, "Lỗi lưu hóa đơn. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                        });
+            } else {
+                Toast.makeText(this, "Không có ID đơn hàng để lưu.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
