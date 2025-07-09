@@ -13,24 +13,32 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.MainActivity;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class PaymentResultActivity extends AppCompatActivity {
 
     private static final String TAG = "PaymentResultActivity";
+    private static final String SERVER_URL = "http://192.168.88.175:5000/save-payment-details"; // Thay bằng IP thực tế của server
 
     private TextView tvMovieName, tvDateTime, tvScreenRoom, tvSelectedSeats, tvTotalAmount;
     private TextView tvPaymentStatus, tvPaymentMessage;
     private TextView tvMomoTransactionId, tvMomoResponseCode, tvMomoMessage;
-    private TextView tvPaymentMethod, tvUserId; // Thêm các trường mới
+    private TextView tvPaymentMethod, tvUserId;
     private ImageButton btnBack;
     private android.widget.Button btnCompletePayment;
 
@@ -46,6 +54,9 @@ public class PaymentResultActivity extends AppCompatActivity {
     private boolean paymentSuccess;
     private String idMethodPayment;
 
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private CollectionReference ordersRef = db.collection("orders");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +65,8 @@ public class PaymentResultActivity extends AppCompatActivity {
         initializeViews();
         retrieveIntentData();
         handlePaymentResult();
+        saveSeatsToSubcollection();
+        sendPaymentDetailsToServer(); // Gửi dữ liệu lên server
         setupButtonListeners();
     }
 
@@ -69,6 +82,8 @@ public class PaymentResultActivity extends AppCompatActivity {
             tvMomoTransactionId = findViewById(R.id.tv_momo_transaction_id);
             tvMomoResponseCode = findViewById(R.id.tv_momo_response_code);
             tvMomoMessage = findViewById(R.id.tv_momo_message);
+            tvPaymentMethod = findViewById(R.id.tv_payment_method);
+            tvUserId = findViewById(R.id.tv_user_id);
             btnBack = findViewById(R.id.btn_back_result);
             btnCompletePayment = findViewById(R.id.btn_complete_payment);
 
@@ -91,6 +106,7 @@ public class PaymentResultActivity extends AppCompatActivity {
             Intent intent = getIntent();
             if (intent != null && intent.getExtras() != null) {
                 Bundle extras = intent.getExtras();
+                Log.d(TAG, "Extras keys: " + extras.keySet().toString());
                 selectedDeskIds = extras.getStringArrayList("selectedDeskIds");
                 totalAmount = extras.getInt("totalPrice", 0);
                 movieName = extras.getString("movieName", "N/A");
@@ -103,6 +119,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                 paymentSuccess = extras.getBoolean("payment_success", false);
                 idMethodPayment = extras.getString("idMethodPayment", "N/A");
 
+                Log.d(TAG, "Received data - orderId: " + orderId + ", totalAmount: " + totalAmount + ", selectedDeskIds: " + selectedDeskIds);
                 if (selectedDeskIds == null) selectedDeskIds = new ArrayList<>();
                 if (selectedDeskCategories == null) selectedDeskCategories = new ArrayList<>();
                 if (selectedDeskPrices == null) selectedDeskPrices = new ArrayList<>();
@@ -178,7 +195,6 @@ public class PaymentResultActivity extends AppCompatActivity {
                 verifyPaymentWithServer(orderId);
             }
         } else if (paymentSuccess) {
-            // Xử lý khi chuyển trực tiếp từ PaymentActivity với payment_success
             displayPaymentResult("0", orderId, String.valueOf(totalAmount), "Thanh toán vé xem phim", null, "Thanh toán thành công qua " + idMethodPayment);
             if (orderId != null && !orderId.isEmpty()) {
                 verifyPaymentWithServer(orderId);
@@ -187,9 +203,9 @@ public class PaymentResultActivity extends AppCompatActivity {
             tvPaymentStatus.setText("Chưa có kết quả thanh toán");
             tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.darker_gray, getTheme()));
             tvPaymentMessage.setText("Vui lòng kiểm tra lại quy trình thanh toán.");
-            tvMomoTransactionId.setText("Mã giao dịch MOMO: N/A");
-            tvMomoResponseCode.setText("Mã phản hồi MOMO: N/A");
-            tvMomoMessage.setText("Thông tin đơn hàng MOMO: N/A");
+            tvMomoTransactionId.setText("Mã giao dịch " + idMethodPayment + ": N/A");
+            tvMomoResponseCode.setText("Mã phản hồi " + idMethodPayment + ": N/A");
+            tvMomoMessage.setText("Thông tin đơn hàng " + idMethodPayment + ": N/A");
         }
     }
 
@@ -201,7 +217,7 @@ public class PaymentResultActivity extends AppCompatActivity {
         if (resultCode != null) {
             switch (resultCode) {
                 case "0":
-                case "00": // Thêm cho VNPay
+                case "00":
                     statusMessage = "Thanh toán thành công!";
                     detailedMessage = "Giao dịch của bạn đã được thực hiện thành công qua " + idMethodPayment + ".";
                     statusColor = android.R.color.holo_green_dark;
@@ -244,7 +260,7 @@ public class PaymentResultActivity extends AppCompatActivity {
     private void verifyPaymentWithServer(String orderId) {
         new Thread(() -> {
             try {
-                URL url = new URL("http://192.168.88.175:5000/payment/check-order-status?orderId=" + orderId);
+                URL url = new URL("http://192.168.88.175:5000/check-order-status?orderId=" + orderId);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(10000);
@@ -276,6 +292,80 @@ public class PaymentResultActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối tới server kiểm tra thanh toán.", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    private void saveSeatsToSubcollection() {
+        if (orderId != null && !orderId.isEmpty() && selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
+            DocumentReference orderDocRef = ordersRef.document(orderId);
+            Map<String, Object> seatData = new HashMap<>();
+            for (int i = 0; i < selectedDeskIds.size(); i++) {
+                String deskId = selectedDeskIds.get(i);
+                Map<String, Object> seatDetails = new HashMap<>();
+                seatDetails.put("deskId", deskId);
+                if (selectedDeskCategories != null && i < selectedDeskCategories.size()) {
+                    seatDetails.put("category", selectedDeskCategories.get(i));
+                }
+                if (selectedDeskPrices != null && i < selectedDeskPrices.size()) {
+                    seatDetails.put("price", selectedDeskPrices.get(i));
+                }
+                seatData.put("seat_" + i, seatDetails);
+            }
+            orderDocRef.collection("seats").document("seat_details").set(seatData)
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Subcollection 'seats' saved successfully for order: " + orderId))
+                    .addOnFailureListener(e -> Log.e(TAG, "Error saving subcollection 'seats': " + e.getMessage()));
+        }
+    }
+
+    private void sendPaymentDetailsToServer() {
+        new Thread(() -> {
+            try {
+                URL url = new URL(SERVER_URL);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                // Tạo JSON payload
+                JSONObject jsonPayload = new JSONObject();
+                jsonPayload.put("orderId", orderId);
+                jsonPayload.put("selectedDeskIds", new JSONObject().put("ids", selectedDeskIds != null ? selectedDeskIds : new ArrayList<>()));
+                jsonPayload.put("totalAmount", totalAmount);
+                jsonPayload.put("movieName", movieName);
+                jsonPayload.put("screeningDateTime", screeningDateTime);
+                jsonPayload.put("screenRoomName", screenRoomName);
+                jsonPayload.put("idUser", idUser);
+                jsonPayload.put("idMethodPayment", idMethodPayment);
+                jsonPayload.put("paymentSuccess", paymentSuccess);
+
+                // Gửi yêu cầu
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonPayload.toString().getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        response.append(line);
+                    }
+                    in.close();
+
+                    runOnUiThread(() -> Toast.makeText(this, "Dữ liệu đã được gửi lên server!", Toast.LENGTH_SHORT).show());
+                    Log.d(TAG, "Server response: " + response.toString());
+                } else {
+                    runOnUiThread(() -> Toast.makeText(this, "Lỗi gửi dữ liệu lên server.", Toast.LENGTH_SHORT).show());
+                    Log.e(TAG, "Server error: " + responseCode);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối server.", Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
