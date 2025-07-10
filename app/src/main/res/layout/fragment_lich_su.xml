@@ -32,4 +32,11 @@
             android:textSize="25sp"
             android:translationY="18dp" />
     </RelativeLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcv_watched_movies"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:padding="8dp"
+        android:clipToPadding="false" />
 </LinearLayout>
