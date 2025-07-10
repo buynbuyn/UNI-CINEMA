@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.uni_cinema.R;
 import com.example.uni_cinema.MainActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.Timestamp;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,9 +24,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Locale;
-
-// Giữ nguyên phần package và import như bạn đã viết
+import java.util.Date;
 
 public class PaymentResultActivity extends AppCompatActivity {
 
@@ -43,12 +45,18 @@ public class PaymentResultActivity extends AppCompatActivity {
     private String movieName = "";
     private String screeningDateTime = "";
     private String screenRoomName = "";
+    private String orderId = "";
+    private String transactionId = "";
+    private String paymentStatus = "";
     private FirebaseFirestore db;
-
+    private String uid;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_result);
+
+        // Initialize Firebase
+        db = FirebaseFirestore.getInstance();
 
         initializeViews();
         handlePaymentResult();
@@ -83,13 +91,13 @@ public class PaymentResultActivity extends AppCompatActivity {
 
         if (Intent.ACTION_VIEW.equals(appLinkAction) && appLinkData != null) {
             String resultCode = appLinkData.getQueryParameter("resultCode");
-            String orderId = appLinkData.getQueryParameter("orderId");
+            orderId = appLinkData.getQueryParameter("orderId");
             String amount = appLinkData.getQueryParameter("amount");
             String orderInfo = appLinkData.getQueryParameter("orderInfo");
-            String transId = appLinkData.getQueryParameter("transId");
+            transactionId = appLinkData.getQueryParameter("transId");
             String message = appLinkData.getQueryParameter("message");
 
-            displayPaymentResult(resultCode, orderId, amount, orderInfo, transId, message);
+            displayPaymentResult(resultCode, orderId, amount, orderInfo, transactionId, message);
 
             if (orderId != null && !orderId.isEmpty()) {
                 verifyPaymentWithServer(orderId);
@@ -110,18 +118,22 @@ public class PaymentResultActivity extends AppCompatActivity {
             statusMessage = "Thanh toán thành công!";
             detailedMessage = "Giao dịch đã hoàn tất.";
             statusColor = android.R.color.holo_green_dark;
+            paymentStatus = "SUCCESS";
         } else if ("1".equals(resultCode)) {
             statusMessage = "Thanh toán thất bại!";
             detailedMessage = "Vui lòng thử lại.";
             statusColor = android.R.color.holo_red_dark;
+            paymentStatus = "FAILED";
         } else if ("3".equals(resultCode)) {
             statusMessage = "Giao dịch đã bị huỷ";
             detailedMessage = "Bạn đã huỷ giao dịch.";
             statusColor = android.R.color.holo_orange_dark;
+            paymentStatus = "CANCELLED";
         } else {
             statusMessage = "Không rõ kết quả";
             detailedMessage = "Lỗi mã: " + resultCode;
             statusColor = android.R.color.holo_red_dark;
+            paymentStatus = "FAILED";
         }
 
         tvPaymentStatus.setText(statusMessage);
@@ -134,6 +146,7 @@ public class PaymentResultActivity extends AppCompatActivity {
         try {
             if (amount != null) {
                 double amt = Double.parseDouble(amount);
+                totalAmount = (int) amt;
                 tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", amt));
             }
         } catch (Exception e) {
@@ -144,7 +157,7 @@ public class PaymentResultActivity extends AppCompatActivity {
     private void verifyPaymentWithServer(String orderId) {
         new Thread(() -> {
             try {
-                URL url = new URL("http://192.168.88.175:5000/payment/check-order-status?orderId=" + orderId);
+                URL url = new URL("http://192.168.165.79:5000/payment/check-order-status?orderId=" + orderId);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(10000);
@@ -164,6 +177,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                     movieName = json.optString("movie", "N/A");
                     screeningDateTime = json.optString("dateTime", "N/A");
                     screenRoomName = json.optString("screenRoom", "N/A");
+                    uid = json.optString("user", "N/A");
 
                     JSONArray seatArray = json.optJSONArray("desk");
                     selectedDeskIds.clear();
@@ -174,12 +188,16 @@ public class PaymentResultActivity extends AppCompatActivity {
                     }
 
                     String status = json.optString("status", "FAILED");
+                    paymentStatus = status;
 
                     runOnUiThread(() -> {
                         if (!isFinishing()) {
                             if ("SUCCESS".equals(status)) {
                                 tvPaymentStatus.setText("Đã xác nhận thanh toán");
                                 tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark, getTheme()));
+
+                                // Lưu đơn hàng vào Firebase khi thanh toán thành công
+                                saveOrderToFirebase();
                             } else {
                                 tvPaymentStatus.setText("Thanh toán thất bại hoặc chưa hoàn tất");
                                 tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark, getTheme()));
@@ -197,6 +215,83 @@ public class PaymentResultActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối máy chủ", Toast.LENGTH_SHORT).show());
             }
         }).start();
+    }
+
+    private void saveOrderToFirebase() {
+        if (orderId == null || orderId.isEmpty()) {
+            Log.e(TAG, "Order ID is null or empty");
+            return;
+        }
+
+        try {
+            // Tạo order data
+            Map<String, Object> orderData = new HashMap<>();
+            orderData.put("dateTimeOrder", Timestamp.now());
+            orderData.put("idDiscount", "idDiscount0000001"); // Có thể thay đổi theo logic business
+            orderData.put("idMethodPayment", "idMethodPayment01"); // MoMo payment
+            orderData.put("idScreening", "idScreening0000000000000000001"); // Lấy từ server hoặc SharedPreferences
+            orderData.put("idUser", uid); // Lấy từ SharedPreferences hoặc Firebase Auth
+            orderData.put("screenRoomName", screenRoomName);
+            orderData.put("stateOrder", "Thanh toán thành công");
+            orderData.put("totalPrice", totalAmount);
+            orderData.put("transactionId", transactionId != null ? transactionId : "");
+            orderData.put("paymentStatus", paymentStatus);
+
+            // Lưu order chính
+            db.collection("orders")
+                    .document(orderId)
+                    .set(orderData)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Order saved successfully");
+
+                        // Lưu thông tin ghế đã chọn
+                        saveDeskSelections();
+
+                        Toast.makeText(this, "Đơn hàng đã được lưu thành công!", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error saving order", e);
+                        Toast.makeText(this, "Lỗi lưu đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error preparing order data", e);
+            Toast.makeText(this, "Lỗi chuẩn bị dữ liệu đơn hàng", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveDeskSelections() {
+        if (selectedDeskIds == null || selectedDeskIds.isEmpty()) {
+            Log.w(TAG, "No desk selections to save");
+            return;
+        }
+
+        // Lưu thông tin ghế đã chọn vào subcollection
+        for (String deskId : selectedDeskIds) {
+            Map<String, Object> deskData = new HashMap<>();
+            deskData.put("deskId", deskId);
+            deskData.put("orderId", orderId);
+            deskData.put("selectedAt", Timestamp.now());
+
+            db.collection("orders")
+                    .document(orderId)
+                    .collection("desk")
+                    .document(deskId)
+                    .set(deskData)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Desk selection saved: " + deskId);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error saving desk selection: " + deskId, e);
+                    });
+        }
+    }
+
+    private String getCurrentUserId() {
+        // Lấy user ID từ SharedPreferences hoặc Firebase Auth
+        SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        String userId = prefs.getString("user_id", "idUser1"); // Default user
+        return userId;
     }
 
     private void displayOrderInfo() {

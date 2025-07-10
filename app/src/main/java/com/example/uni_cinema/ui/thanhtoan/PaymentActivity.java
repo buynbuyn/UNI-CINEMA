@@ -18,7 +18,10 @@ import com.example.uni_cinema.R;
 import com.example.uni_cinema.login.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -65,6 +68,7 @@ public class PaymentActivity extends AppCompatActivity {
     private ArrayList<Integer> selectedDeskPrices;
     private double totalAmount;
     private String movieName, screeningDateTime, screenRoomName;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,20 +87,6 @@ public class PaymentActivity extends AppCompatActivity {
             finish();
             return;
         }
-        FirebaseFirestore.getInstance().collection("orders")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    int count = queryDocumentSnapshots.size();
-                    currentOrderReferenceId = "idOrder" + String.format("%027d", count + 1);
-
-                    Log.d(TAG, "Generated idOrder: " + currentOrderReferenceId);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Lỗi tạo idOrder: " + e.getMessage());
-                    Toast.makeText(this, "Không thể tạo đơn hàng.", Toast.LENGTH_SHORT).show();
-                    resetPaymentState();
-                });
-
     }
 
     private void debugIntentData() {
@@ -316,6 +306,8 @@ public class PaymentActivity extends AppCompatActivity {
         btnConfirmPayment.setEnabled(false);
         btnConfirmPayment.setText("Đang xử lý...");
 
+        currentOrderReferenceId = "MOMO" + System.currentTimeMillis();
+
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
         String idUser = currentUser.getUid();
@@ -517,6 +509,7 @@ public class PaymentActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if ("SUCCESS".equals(status)) {
                             updatePaymentStatus("SUCCESS");
+                            updateSeatAvailability();
                             Toast.makeText(this, "Thanh toán MoMo thành công!", Toast.LENGTH_LONG).show();
                             // Có thể chuyển sang màn hình kết quả hoặc đóng activity
                             finish();
@@ -538,6 +531,81 @@ public class PaymentActivity extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * Cập nhật trạng thái ghế trong Firestore sau khi thanh toán thành công
+     */
+    private void updateSeatAvailability() {
+        if (screenRoomName == null || selectedDeskIds == null || selectedDeskIds.isEmpty()) {
+            Log.e(TAG, "Không thể cập nhật trạng thái ghế: thiếu screenRoomName hoặc selectedDeskIds");
+            return;
+        }
+
+        Log.d(TAG, "Đang cập nhật trạng thái ghế cho screening room: " + screenRoomName);
+
+        // Truy vấn collection screening để tìm document có idScreening tương ứng
+        db.collection("screening")
+                .whereEqualTo("idScreening", screenRoomName)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        // Lấy document đầu tiên (giả sử idScreening là unique)
+                        DocumentSnapshot screeningDoc = querySnapshot.getDocuments().get(0);
+                        String screeningDocId = screeningDoc.getString("idScreenRoom");
+
+                        Log.d(TAG, "Tìm thấy screening document: " + screeningDocId);
+
+                        // Sử dụng WriteBatch để cập nhật nhiều ghế cùng lúc
+                        WriteBatch batch = db.batch();
+
+                        for (String deskId : selectedDeskIds) {
+                            Log.d("DeskId", deskId);
+                            if (deskId != null && !deskId.isEmpty()) {
+                                DocumentReference deskRef = db.collection("screeningRoom")
+                                        .document(screeningDocId)
+                                        .collection("desk")
+                                        .document(deskId);
+
+                                deskRef.get().addOnSuccessListener(documentSnapshot -> {
+                                    if (documentSnapshot.exists()) {
+                                        batch.update(deskRef, "available", false);
+                                        Log.d(TAG, "Thêm vào batch cập nhật ghế: " + deskId);
+                                    } else {
+                                        Log.e(TAG, "Ghế " + deskId + " không tồn tại trong Firestore");
+                                    }
+
+
+                                }).addOnFailureListener(e -> {
+                                    Log.e(TAG, "Lỗi kiểm tra ghế " + deskId + ": " + e.getMessage(), e);
+                                });
+
+                                batch.update(deskRef, "available", false);
+                                Log.d(TAG, "Thêm vào batch cập nhật ghế: " + deskId);
+                            }
+                        }
+
+                        // Commit batch
+                        batch.commit()
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d(TAG, "Cập nhật trạng thái ghế thành công cho " + selectedDeskIds.size() + " ghế");
+                                    Toast.makeText(this, "Đã cập nhật trạng thái ghế thành công!", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Lỗi cập nhật trạng thái ghế: " + e.getMessage(), e);
+                                    Toast.makeText(this, "Lỗi cập nhật trạng thái ghế. Vui lòng liên hệ hỗ trợ.", Toast.LENGTH_LONG).show();
+                                });
+
+                    } else {
+                        Log.e(TAG, "Không tìm thấy screening document với idScreening: " + screenRoomName);
+                        Toast.makeText(this, "Không tìm thấy phòng chiếu!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Lỗi truy vấn screening collection: " + e.getMessage(), e);
+                    Toast.makeText(this, "Lỗi truy cập dữ liệu. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+                });
+    }
+
 
     private void updatePaymentStatus(String status) {
         SharedPreferences prefs = getSharedPreferences(PREFS_PAYMENT_DATA, MODE_PRIVATE);
