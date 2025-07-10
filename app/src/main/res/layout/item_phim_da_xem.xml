@@ -1,11 +1,11 @@
-<!-- res/layout/item_phim_da_xem.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="8dp"
     android:orientation="vertical"
     android:padding="12dp"
     android:background="@android:color/white"
-    android:layout_margin="8dp"
     android:elevation="2dp">
 
     <TextView
@@ -17,10 +17,18 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tv_order_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mã vé: "
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
+
+    <TextView
         android:id="@+id/tv_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Giá: "
+        android:text="Tổng tiền: "
         android:textSize="16sp"
         android:layout_marginTop="4dp" />
 
@@ -29,6 +37,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Ngày đặt: "
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tv_payment_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trạng thái thanh toán: "
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tv_transaction_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mã giao dịch: "
         android:textSize="14sp"
         android:layout_marginTop="4dp" />
 </LinearLayout>

@@ -57,20 +57,22 @@ public class LichSuFragment extends Fragment {
         WatchedMovieAdapter adapter = new WatchedMovieAdapter(watchedMovies);
         recyclerView.setAdapter(adapter);
 
-        // Lấy UID của người dùng đang đăng nhập
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         FirebaseFirestore.getInstance().collection("orders")
                 .whereEqualTo("idUser", uid)
-                .whereEqualTo("stateOrder", "Thanh toán thành công!")
+                .whereEqualTo("stateOrder", "Thanh toán thành công")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         String room = doc.getString("screenRoomName");
                         long price = doc.getLong("totalPrice");
                         Date date = doc.getDate("dateTimeOrder");
+                        String orderId = doc.getId();
+                        String paymentStatus = doc.getString("paymentStatus");
+                        String transactionId = doc.getString("transactionId");
 
-                        watchedMovies.add(new WatchedMovie(room, price, date));
+                        watchedMovies.add(new WatchedMovie(room, price, date, orderId, paymentStatus, transactionId));
                     }
                     adapter.notifyDataSetChanged();
                 })
