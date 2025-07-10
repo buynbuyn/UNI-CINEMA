@@ -50,20 +50,20 @@
     <string name="complete_payment_description">Complete payment process</string>
     <string name="movie_poster_description">Movie poster image</string>
 
-<!--        <string name="error_loading_ui">Lỗi tải giao diện. Vui lòng thử lại.</string>-->
-<!--        <string name="error_loading_order">Không nhận được thông tin đơn hàng. Vui lòng thử lại.</string>-->
-<!--        <string name="error_updating_ui">Lỗi cập nhật thông tin đơn hàng.</string>-->
-<!--        <string name="invalid_order_info">Thông tin đơn hàng không hợp lệ.</string>-->
-<!--        <string name="login_required">Bạn cần đăng nhập để thanh toán.</string>-->
-<!--        <string name="preparing_payment">Đang chuẩn bị thanh toán qua %s...</string>-->
-<!--        <string name="payment_error">Lỗi trong quá trình thanh toán. Vui lòng thử lại.</string>-->
-<!--        <string name="error_generating_url">Không thể tạo URL thanh toán.</string>-->
-<!--        <string name="error_opening_gateway">Không thể mở cổng thanh toán. Vui lòng kiểm tra trình duyệt.</string>-->
-<!--        <string name="empty_payment_url">URL thanh toán trống.</string>-->
-<!--        <string name="no_seats_selected">Chưa chọn ghế nào</string>-->
-<!--        <string name="payment_success">Thanh toán thành công!</string>-->
-<!--        <string name="payment_failed">Thanh toán thất bại. Vui lòng thử lại.</string>-->
-<!--        <string name="payment_canceled">Thanh toán bị hủy.</string>-->
-<!--        <string name="payment_verifying">Đang kiểm tra trạng thái thanh toán...</string>-->
-<!--        <string name="no_browser_found">Không tìm thấy trình duyệt để thực hiện thanh toán.</string>-->
+    <!--        <string name="error_loading_ui">Lỗi tải giao diện. Vui lòng thử lại.</string>-->
+    <!--        <string name="error_loading_order">Không nhận được thông tin đơn hàng. Vui lòng thử lại.</string>-->
+    <!--        <string name="error_updating_ui">Lỗi cập nhật thông tin đơn hàng.</string>-->
+    <!--        <string name="invalid_order_info">Thông tin đơn hàng không hợp lệ.</string>-->
+    <!--        <string name="login_required">Bạn cần đăng nhập để thanh toán.</string>-->
+    <!--        <string name="preparing_payment">Đang chuẩn bị thanh toán qua %s...</string>-->
+    <!--        <string name="payment_error">Lỗi trong quá trình thanh toán. Vui lòng thử lại.</string>-->
+    <!--        <string name="error_generating_url">Không thể tạo URL thanh toán.</string>-->
+    <!--        <string name="error_opening_gateway">Không thể mở cổng thanh toán. Vui lòng kiểm tra trình duyệt.</string>-->
+    <!--        <string name="empty_payment_url">URL thanh toán trống.</string>-->
+    <!--        <string name="no_seats_selected">Chưa chọn ghế nào</string>-->
+    <!--        <string name="payment_success">Thanh toán thành công!</string>-->
+    <!--        <string name="payment_failed">Thanh toán thất bại. Vui lòng thử lại.</string>-->
+    <!--        <string name="payment_canceled">Thanh toán bị hủy.</string>-->
+    <!--        <string name="payment_verifying">Đang kiểm tra trạng thái thanh toán...</string>-->
+    <!--        <string name="no_browser_found">Không tìm thấy trình duyệt để thực hiện thanh toán.</string>-->
 </resources>

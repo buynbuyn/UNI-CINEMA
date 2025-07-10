@@ -16,8 +16,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.UNI_CINEMA"
-        tools:targetApi="31"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+        <activity
+            android:name=".ui.danhgia.DanhgiaActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.thanhtoan.PaymentActivity"
             android:exported="true"
@@ -44,12 +47,14 @@
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- HTTP scheme cho deep link -->
-                <data android:scheme="https"
+                <data
                     android:host="yourdomain.com"
-                    android:pathPrefix="/payment-result" />
+                    android:pathPrefix="/payment-result"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
         <activity

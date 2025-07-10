@@ -24,7 +24,10 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.uni_cinema.MainActivity;
 import com.example.uni_cinema.R;
+import com.example.uni_cinema.ui.danhgia.DanhgiaActivity;
 import com.example.uni_cinema.ui.rap.RapFragment;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener;
@@ -35,7 +38,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private TextView txtTieuDe, txtThoiLuong, txtTheLoai, txtThongKeTuoi, txtThongKeGioiTinh, txtMoTa;
     private ImageView imgPoster;
     private  Button btnBuyTicket;
+    private Button btnReview;
     private FirebaseFirestore db;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +64,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         imgPoster = findViewById(R.id.imgPoster);
 
         db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
 
         // Lấy id phim
         String movieId = getIntent().getStringExtra("movieId");
@@ -73,6 +79,18 @@ public class MovieDetailsActivity extends AppCompatActivity {
             intent.putExtra("movieTitle", movieTitle);
             intent.putExtra("goToRap", true); // 👈 dùng để đánh dấu cần mở Fragment Rap
             startActivity(intent); // 📦 chuyển sang fragment rạp
+        });
+        btnReview = findViewById(R.id.btnReview);
+        btnReview.setOnClickListener(v -> {
+            FirebaseUser user = auth.getCurrentUser();
+            if (user == null) {
+                Toast.makeText(this, "Vui lòng đăng nhập để viết đánh giá", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Intent intent = new Intent(MovieDetailsActivity.this, DanhgiaActivity.class);
+            intent.putExtra("idMovie", movieId);
+            intent.putExtra("id_user", user.getUid());
+            startActivity(intent);
         });
 
         ImageButton btn_back = findViewById(R.id.btn_back);
