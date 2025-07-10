@@ -57,6 +57,7 @@ public class HomeFragment extends Fragment {
         PromotionSliderAdapter adapter = new PromotionSliderAdapter(images);
         slider.setAdapter(adapter);
 
+        // Tự động lướt slider sau mỗi 3 giây
         Runnable sliderRunnable = new Runnable() {
             @Override
             public void run() {
@@ -68,15 +69,16 @@ public class HomeFragment extends Fragment {
         };
         handler.post(sliderRunnable);
 
-        // Setup Movie Carousel
+        // Thiết lập carousel phim sử dụng RecyclerView ngang
         carousel = binding.cardCarousel;
         layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         carousel.setLayoutManager(layoutManager);
 
+        // Khởi tạo adapter phim và gán vào RecyclerView
         movieAdapter = new MovieCardAdapter(movieList);
         carousel.setAdapter(movieAdapter);
 
-        // Fetch movies from Firestore
+        // lấy phim từ Firestore
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("movies")
                 .get()
@@ -100,7 +102,7 @@ public class HomeFragment extends Fragment {
                     }
                     movieAdapter.notifyDataSetChanged();
 
-                    // Scroll to center
+                    // di chuyển phim đến trung tâm
                     if (!movieList.isEmpty()) {
                         int startPosition = Integer.MAX_VALUE / 2;
                         startPosition = startPosition - (startPosition % movieList.size());
@@ -111,7 +113,7 @@ public class HomeFragment extends Fragment {
                         Toast.makeText(getContext(), "Không tải được danh sách phim", Toast.LENGTH_SHORT).show()
                 );
 
-        // Snap and animation
+
         PagerSnapHelper snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(carousel);
 
