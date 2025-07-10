@@ -5,17 +5,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.uni_cinema.MainActivity;
 import com.example.uni_cinema.R;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
+import com.example.uni_cinema.MainActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
@@ -26,42 +23,32 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
+
+// Giữ nguyên phần package và import như bạn đã viết
 
 public class PaymentResultActivity extends AppCompatActivity {
 
     private static final String TAG = "PaymentResultActivity";
-    private static final String SERVER_URL = "https://your-secure-api.com/payment/check-order-status"; // Replace with your secure server URL
 
     private TextView tvMovieName, tvDateTime, tvScreenRoom, tvSelectedSeats, tvTotalAmount;
     private TextView tvPaymentStatus, tvPaymentMessage;
     private TextView tvMomoTransactionId, tvMomoResponseCode, tvMomoMessage;
     private ImageButton btnBack;
-    private Button btnCompletePayment;
+    private android.widget.Button btnCompletePayment;
 
     private ArrayList<String> selectedDeskIds = new ArrayList<>();
+    private ArrayList<String> selectedDeskCategories = new ArrayList<>();
     private int totalAmount;
     private String movieName = "";
     private String screeningDateTime = "";
     private String screenRoomName = "";
-    private String orderId;
-    private String uid;
-    private String idMethodPayment;
-    private String discount;
-    private boolean paymentSuccess;
     private FirebaseFirestore db;
-    private CollectionReference ordersRef; // Changed from DocumentReference to CollectionReference
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_result);
-
-        // Initialize Firestore
-        db = FirebaseFirestore.getInstance();
-        ordersRef = db.collection("orders"); // This is now correct
 
         initializeViews();
         handlePaymentResult();
@@ -83,8 +70,8 @@ public class PaymentResultActivity extends AppCompatActivity {
             btnBack = findViewById(R.id.btn_back_result);
             btnCompletePayment = findViewById(R.id.btn_complete_payment);
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing views: " + e.getMessage(), e);
-            Toast.makeText(this, "Không thể khởi tạo giao diện. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error initializing views", e);
+            Toast.makeText(this, "Không thể khởi tạo giao diện", Toast.LENGTH_LONG).show();
             finish();
         }
     }
@@ -95,28 +82,17 @@ public class PaymentResultActivity extends AppCompatActivity {
         Uri appLinkData = appLinkIntent.getData();
 
         if (Intent.ACTION_VIEW.equals(appLinkAction) && appLinkData != null) {
-            orderId = appLinkData.getQueryParameter("orderId");
             String resultCode = appLinkData.getQueryParameter("resultCode");
+            String orderId = appLinkData.getQueryParameter("orderId");
             String amount = appLinkData.getQueryParameter("amount");
             String orderInfo = appLinkData.getQueryParameter("orderInfo");
             String transId = appLinkData.getQueryParameter("transId");
             String message = appLinkData.getQueryParameter("message");
 
-            // Initialize user-specific variables (replace with actual logic)
-            SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
-            uid = prefs.getString("uid", "");
-            idMethodPayment = "MOMO"; // Replace with actual payment method
-            discount = "0"; // Replace with actual discount
-            paymentSuccess = "0".equals(resultCode);
-
             displayPaymentResult(resultCode, orderId, amount, orderInfo, transId, message);
 
             if (orderId != null && !orderId.isEmpty()) {
                 verifyPaymentWithServer(orderId);
-            } else {
-                tvPaymentStatus.setText("Lỗi: Không có mã đơn hàng");
-                tvPaymentStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark, getTheme()));
-                tvPaymentMessage.setText("Vui lòng kiểm tra lại quy trình thanh toán.");
             }
         } else {
             tvPaymentStatus.setText("Không có dữ liệu thanh toán");
@@ -144,7 +120,7 @@ public class PaymentResultActivity extends AppCompatActivity {
             statusColor = android.R.color.holo_orange_dark;
         } else {
             statusMessage = "Không rõ kết quả";
-            detailedMessage = "Lỗi mã: " + (resultCode != null ? resultCode : "N/A");
+            detailedMessage = "Lỗi mã: " + resultCode;
             statusColor = android.R.color.holo_red_dark;
         }
 
@@ -156,24 +132,20 @@ public class PaymentResultActivity extends AppCompatActivity {
         tvMomoMessage.setText("Thông tin đơn hàng MOMO: " + (orderInfo != null ? orderInfo : "N/A"));
 
         try {
-            if (amount != null && !amount.isEmpty()) {
+            if (amount != null) {
                 double amt = Double.parseDouble(amount);
                 tvTotalAmount.setText(String.format(Locale.getDefault(), "%,.0f VNĐ", amt));
-            } else {
-                tvTotalAmount.setText("Số tiền: N/A");
             }
-        } catch (NumberFormatException e) {
-            Log.e(TAG, "Invalid amount format: " + amount, e);
+        } catch (Exception e) {
             tvTotalAmount.setText("Số tiền: N/A");
         }
     }
 
     private void verifyPaymentWithServer(String orderId) {
         new Thread(() -> {
-            HttpURLConnection conn = null;
             try {
-                URL url = new URL(SERVER_URL + "?orderId=" + orderId);
-                conn = (HttpURLConnection) url.openConnection();
+                URL url = new URL("http://192.168.88.175:5000/payment/check-order-status?orderId=" + orderId);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(10000);
@@ -183,9 +155,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     StringBuilder response = new StringBuilder();
                     String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
+                    while ((line = reader.readLine()) != null) response.append(line);
                     reader.close();
 
                     JSONObject json = new JSONObject(response.toString());
@@ -197,7 +167,7 @@ public class PaymentResultActivity extends AppCompatActivity {
 
                     JSONArray seatArray = json.optJSONArray("desk");
                     selectedDeskIds.clear();
-                    if (seatArray != null && seatArray.length() > 0) {
+                    if (seatArray != null) {
                         for (int i = 0; i < seatArray.length(); i++) {
                             selectedDeskIds.add(seatArray.getString(i));
                         }
@@ -217,25 +187,22 @@ public class PaymentResultActivity extends AppCompatActivity {
                             displayOrderInfo();
                         }
                     });
+
                 } else {
                     Log.e(TAG, "Server response code: " + responseCode);
-                    runOnUiThread(() -> Toast.makeText(this, "Lỗi xác nhận từ máy chủ", Toast.LENGTH_SHORT).show());
                 }
+
             } catch (Exception e) {
-                Log.e(TAG, "verifyPaymentWithServer error: " + e.getMessage(), e);
+                Log.e(TAG, "verifyPaymentWithServer error: " + e.getMessage());
                 runOnUiThread(() -> Toast.makeText(this, "Lỗi kết nối máy chủ", Toast.LENGTH_SHORT).show());
-            } finally {
-                if (conn != null) {
-                    conn.disconnect(); // Ensure connection is closed
-                }
             }
         }).start();
     }
 
     private void displayOrderInfo() {
-        tvMovieName.setText(movieName != null ? movieName : "N/A");
-        tvDateTime.setText(screeningDateTime != null ? screeningDateTime : "N/A");
-        tvScreenRoom.setText(screenRoomName != null ? screenRoomName : "N/A");
+        tvMovieName.setText(movieName);
+        tvDateTime.setText(screeningDateTime);
+        tvScreenRoom.setText(screenRoomName);
 
         if (selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -253,78 +220,11 @@ public class PaymentResultActivity extends AppCompatActivity {
 
     private void setupButtonListeners() {
         btnBack.setOnClickListener(v -> finish());
-
         btnCompletePayment.setOnClickListener(v -> {
-            if (orderId != null && !orderId.isEmpty()) {
-                DocumentReference orderDocRef = ordersRef.document(orderId);
-                Map<String, Object> orderData = new HashMap<>();
-                orderData.put("screenRoomName", screenRoomName != null ? screenRoomName : "N/A");
-                orderData.put("totalPrice", totalAmount);
-                orderData.put("idUser", uid != null ? uid : "");
-                orderData.put("stateOrder", paymentSuccess);
-                orderData.put("idMethodPayment", idMethodPayment != null ? idMethodPayment : "N/A");
-                orderData.put("idDiscount", discount != null ? discount : "0");
-                orderData.put("timestamp", System.currentTimeMillis());
-
-                orderDocRef.set(orderData)
-                        .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG, "Order saved successfully with ID: " + orderId);
-                            saveSeatsToSubcollection();
-                            updateUserPoints();
-                            Intent mainIntent = new Intent(PaymentResultActivity.this, MainActivity.class);
-                            mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(mainIntent);
-                            finish();
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error saving order: " + e.getMessage(), e);
-                            Toast.makeText(this, "Lỗi lưu hóa đơn. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
-                        });
-            } else {
-                Toast.makeText(this, "Không có ID đơn hàng để lưu.", Toast.LENGTH_SHORT).show();
-            }
+            Intent intent = new Intent(PaymentResultActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
         });
-    }
-
-    private void saveSeatsToSubcollection() {
-        if (orderId != null && !orderId.isEmpty() && selectedDeskIds != null && !selectedDeskIds.isEmpty()) {
-            DocumentReference orderDocRef = ordersRef.document(orderId);
-            for (String seatId : selectedDeskIds) {
-                Map<String, Object> seatData = new HashMap<>();
-                seatData.put("seatId", seatId);
-                seatData.put("timestamp", System.currentTimeMillis());
-                orderDocRef.collection("seats").document(seatId).set(seatData)
-                        .addOnSuccessListener(aVoid -> Log.d(TAG, "Seat " + seatId + " saved successfully"))
-                        .addOnFailureListener(e -> Log.e(TAG, "Error saving seat " + seatId + ": " + e.getMessage(), e));
-            }
-        } else {
-            Log.w(TAG, "No seats or orderId to save to subcollection");
-        }
-    }
-
-    private void updateUserPoints() {
-        if (uid != null && !uid.isEmpty()) {
-            DocumentReference userDocRef = db.collection("users").document(uid);
-            userDocRef.get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    int currentPoints = documentSnapshot.getLong("point") != null ? documentSnapshot.getLong("point").intValue() : 0;
-                    int newPoints = currentPoints;
-
-                    for (String seatId : selectedDeskIds) {
-                        if (seatId.contains("J")) {
-                            newPoints += 2;
-                        } else {
-                            newPoints += 1;
-                        }
-                    }
-
-                    userDocRef.update("point", newPoints);
-                } else {
-                    Log.w(TAG, "User document does not exist for uid: " + uid);
-                }
-            }).addOnFailureListener(e -> Log.e(TAG, "Error fetching user document: " + e.getMessage(), e));
-        } else {
-            Log.w(TAG, "No uid available to update points");
-        }
     }
 }

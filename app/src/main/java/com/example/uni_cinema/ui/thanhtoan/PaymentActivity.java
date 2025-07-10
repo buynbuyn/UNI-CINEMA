@@ -43,7 +43,7 @@ public class PaymentActivity extends AppCompatActivity {
     private static final String PREFS_PAYMENT_DATA = "PaymentData";
     private static final long DEEP_LINK_TIMEOUT = 10 * 60 * 1000; // 10 phút
     private static final long CHECK_INTERVAL = 30 * 1000; // 30 giây
-    private static final String BASE_URL = "http://192.168.88.175:5000/payment/"; // Thay bằng URL server thực tế
+    private static final String BASE_URL = "http://192.168.165.79:5000/payment/"; // Thay bằng URL server thực tế
 
     private Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private Handler checkHandler = new Handler(Looper.getMainLooper());
